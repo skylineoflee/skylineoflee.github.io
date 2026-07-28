@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+db.json
+*.log
+node_modules/
+public/
+.deploy*/
+_multiconfig.yml
+
+# IDE / 工具临时文件
+.zcode/
+.vscode/
+.idea/
+
+# Hexo 临时文件
+hexo-cli/
+*.tmp

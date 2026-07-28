@@ -1,0 +1,926 @@
+// ============================================================================
+// 首页模块化样式（赛博朋克 + 动态背景 + 常驻角色）
+// ============================================================================
+
+// --- 调色板（柔和版）---
+$bg-base        = #14182a   // 主背景（柔和深蓝紫）
+$bg-base-2      = #1a1f3a   // 渐变终点
+$bg-panel       = #1f2742   // 面板底色
+$bg-panel-2     = #2a3354   // 面板悬浮
+$border         = #2f3a5e   // 默认边框
+$border-soft    = #3f4d78   // 悬浮边框
+$neon-cyan      = #4dd0e1   // 主高亮（柔和青色，护眼）
+$neon-cyan-soft = rgba(77, 208, 225, 0.18)
+$neon-cyan-line = rgba(77, 208, 225, 0.4)
+$neon-pink      = #f48fb1   // 点缀色（柔和粉，少量）
+$neon-pink-soft = rgba(244, 143, 177, 0.18)
+$neon-purple    = #b39ddb   // 辅助色（柔和紫）
+$neon-purple-soft = rgba(179, 157, 219, 0.18)
+$text-main      = #e0e6f5   // 正文
+$text-dim       = #8895b3   // 次级
+$mono-font      = 'JetBrains Mono', 'Fira Code', 'Consolas', monospace
+
+// ============================================================================
+// 全局：渐变 + 网格 + 浮动光晕 + 扫描线（动态背景）
+// ============================================================================
+body.home-page
+  background $bg-base !important
+  color $text-main !important
+  min-height 100vh
+  position relative
+  overflow-x hidden
+
+  // --- 装饰层 1：径向光晕（柔和动）---
+  &::before
+    content ''
+    position fixed
+    inset 0
+    pointer-events none
+    z-index 0
+    background:
+      radial-gradient(circle 600px at 15% 20%, rgba(77, 208, 225, 0.12), transparent 60%),
+      radial-gradient(circle 500px at 85% 30%, rgba(179, 157, 219, 0.10), transparent 60%),
+      radial-gradient(circle 700px at 50% 80%, rgba(244, 143, 177, 0.08), transparent 60%)
+    animation bg-shift 20s ease-in-out infinite alternate
+
+  // --- 装饰层 2：扫描网格 ---
+  &::after
+    content ''
+    position fixed
+    inset 0
+    pointer-events none
+    z-index 0
+    background-image:
+      linear-gradient(rgba(77, 208, 225, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77, 208, 225, 0.04) 1px, transparent 1px)
+    background-size 60px 60px
+    mask-image radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 80%)
+    -webkit-mask-image radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 80%)
+
+  // 浮动光球层（独立元素，3 个）
+  .bg-orbs
+    position fixed
+    inset 0
+    pointer-events none
+    z-index 0
+    overflow hidden
+
+    .orb
+      position absolute
+      border-radius 50%
+      filter blur(60px)
+      opacity 0.35
+      animation orb-float 18s ease-in-out infinite
+
+      &.orb-1
+        width 400px
+        height 400px
+        background #4dd0e1
+        top 10%
+        left 5%
+        animation-delay 0s
+
+      &.orb-2
+        width 500px
+        height 500px
+        background #b39ddb
+        top 50%
+        right 5%
+        animation-delay -6s
+
+      &.orb-3
+        width 350px
+        height 350px
+        background #f48fb1
+        bottom 10%
+        left 30%
+        animation-delay -12s
+
+  // 保证主内容在装饰层之上
+  > *:not(.bg-orbs)
+    position relative
+    z-index 1
+
+  #board
+    background transparent !important
+    box-shadow none !important
+    margin-top 0 !important
+    padding-top 76px !important
+
+  #board > .container > .row > .col-12
+    max-width 1280px !important
+    flex 0 0 100% !important
+
+  .header-inner
+    height 0 !important
+    min-height 0 !important
+    padding 0 !important
+    margin 0 !important
+    // inline style 用了 `height: 60vh`，特异性比 !important 还高
+    // 用 !important 配合更高特异性的选择器覆盖
+    body.home-page &  // 提高特异性
+      height 0 !important
+      min-height 0 !important
+
+  // 顶部导航栏固定在最上层 + 强制不透明背景
+  .navbar, header.navbar
+    position fixed !important
+    top 0 !important
+    left 0 !important
+    right 0 !important
+    width 100% !important
+    z-index 9999 !important
+    background rgba(20, 24, 42, 0.95) !important
+    backdrop-filter blur(12px) !important
+    -webkit-backdrop-filter blur(12px) !important
+    border-bottom 1px solid rgba(77, 208, 225, 0.2) !important
+    box-shadow 0 4px 16px rgba(0, 0, 0, 0.4) !important
+
+  // 滚动后依然保持 navbar 可见
+  .navbar.scrolling-navbar.top-nav-collapse
+    background rgba(20, 24, 42, 0.95) !important
+    backdrop-filter blur(12px) !important
+    box-shadow 0 4px 16px rgba(0, 0, 0, 0.4) !important
+
+  // 强制 main 不创建 stacking context
+  main
+    position static !important
+    z-index auto !important
+
+  // 强制 #board 不创建 stacking context
+  #board
+    position static !important
+    z-index auto !important
+
+  #banner
+    display none !important
+
+  .tile
+    background $bg-panel !important
+    border-color $border !important
+
+  .tile-link
+    display block
+    color inherit
+    text-decoration none
+
+  main
+    background transparent !important
+
+// 背景渐变轻动
+@keyframes bg-shift
+  0%
+    transform translate(0, 0)
+    opacity 1
+  100%
+    transform translate(40px, -30px)
+    opacity 0.85
+
+// 光球浮动
+@keyframes orb-float
+  0%, 100%
+    transform translate(0, 0) scale(1)
+  33%
+    transform translate(50px, -40px) scale(1.05)
+  66%
+    transform translate(-30px, 60px) scale(0.95)
+
+// ============================================================================
+// Hero 名片区
+// ============================================================================
+.hero-card
+  display flex
+  align-items center
+  gap 24px
+  padding 24px 28px
+  background linear-gradient(135deg, rgba(31, 39, 66, 0.75), rgba(42, 51, 84, 0.75))
+  backdrop-filter blur(10px)
+  -webkit-backdrop-filter blur(10px)
+  border 1px solid $border
+  border-left 3px solid $neon-cyan
+  border-radius 12px
+  position relative
+  overflow hidden
+  box-shadow 0 4px 24px rgba(0, 0, 0, 0.3)
+  transition all 0.3s
+
+  &::before
+    content ''
+    position absolute
+    top 0
+    left 0
+    right 0
+    height 2px
+    background linear-gradient(90deg, transparent, $neon-cyan, $neon-purple, transparent)
+    background-size 200% 100%
+    animation scanline 4s linear infinite
+
+  &::after
+    content ''
+    position absolute
+    top 0
+    right 0
+    width 18px
+    height 18px
+    background linear-gradient(135deg, transparent 50%, $neon-cyan 50%)
+    opacity 0.7
+
+  &:hover
+    border-color $neon-cyan-line
+    transform translateY(-2px)
+    box-shadow 0 8px 32px rgba(77, 208, 225, 0.15)
+
+@keyframes scanline
+  0%
+    background-position 0% 0%
+  100%
+    background-position 200% 0%
+
+.hero-avatar
+  width 80px
+  height 80px
+  border-radius 50%
+  border 2px solid $neon-cyan
+  flex-shrink 0
+  background #fff
+  box-shadow 0 0 16px $neon-cyan-soft
+  transition transform 0.4s
+  animation avatar-pulse 3s ease-in-out infinite
+
+  &:hover
+    transform rotate(8deg) scale(1.08)
+    animation-play-state paused
+
+@keyframes avatar-pulse
+  0%, 100%
+    box-shadow 0 0 16px $neon-cyan-soft
+  50%
+    box-shadow 0 0 28px rgba(77, 208, 225, 0.4), 0 0 40px rgba(77, 208, 225, 0.2)
+
+.hero-meta
+  flex 1
+  min-width 0
+
+.hero-name
+  font-size 22px
+  font-weight 700
+  margin 0 0 6px
+  color $text-main
+  font-family $mono-font
+  letter-spacing 0.04em
+
+  &::after
+    content ''
+    display block
+    width 60px
+    height 2px
+    margin-top 6px
+    background linear-gradient(90deg, $neon-cyan, transparent)
+
+@keyframes underline-grow
+  from
+    width 0
+  to
+    width 60px
+
+.hero-tagline
+  font-size 13px
+  color $text-dim
+  margin 0 0 14px
+  font-family $mono-font
+
+.hero-social
+  display flex
+  gap 10px
+
+  a
+    width 34px
+    height 34px
+    border-radius 8px
+    background $neon-cyan-soft
+    color $neon-cyan
+    display inline-flex
+    align-items center
+    justify-content center
+    font-size 15px
+    transition all 0.25s
+    border 1px solid transparent
+    position relative
+    overflow hidden
+
+    &::before
+      content ''
+      position absolute
+      top 50%
+      left -100%
+      width 100%
+      height 100%
+      background linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)
+      transform translateY(-50%)
+      transition left 0.5s
+
+    &:hover
+      background $neon-cyan
+      color $bg-base
+      transform translateY(-3px)
+      box-shadow 0 6px 16px $neon-cyan-line
+      border-color $neon-cyan
+
+      &::before
+        left 100%
+
+// ============================================================================
+// 模块系统
+// ============================================================================
+.module
+  margin-top 48px
+  position relative
+
+  &::before
+    content ''
+    position absolute
+    top -24px
+    left 0
+    right 0
+    height 1px
+    background linear-gradient(90deg, transparent, $neon-cyan-line, transparent)
+
+.module-head
+  display flex
+  align-items baseline
+  justify-content space-between
+  margin-bottom 20px
+  padding-bottom 14px
+  border-bottom 1px dashed rgba(77, 208, 225, 0.25)
+  position relative
+
+  &::after
+    content ''
+    position absolute
+    bottom -1px
+    left 0
+    width 80px
+    height 2px
+    background linear-gradient(90deg, $neon-cyan, transparent)
+    animation line-shimmer 4s ease-in-out infinite
+
+@keyframes line-shimmer
+  0%, 100%
+    width 80px
+    opacity 0.7
+  50%
+    width 180px
+    opacity 1
+
+.module-title
+  font-size 17px
+  font-weight 700
+  margin 0
+  color $text-main
+  font-family $mono-font
+  letter-spacing 0.08em
+  display flex
+  align-items center
+  gap 12px
+
+  &::before
+    content '▣'
+    color $neon-cyan
+    font-size 15px
+    text-shadow 0 0 8px $neon-cyan-soft
+    animation dot-blink 2s ease-in-out infinite
+
+@keyframes dot-blink
+  0%, 100%
+    opacity 1
+  50%
+    opacity 0.4
+
+.module-name-en
+  font-size 11px
+  color $text-dim
+  letter-spacing 0.2em
+  font-weight 400
+  margin-left 4px
+
+.module-subtitle
+  font-size 12px
+  color $text-dim
+  margin 0
+  font-family $mono-font
+
+.module-more
+  font-size 12px
+  color $neon-cyan
+  font-family $mono-font
+  padding 4px 12px
+  border-radius 4px
+  border 1px solid $neon-cyan-line
+  transition all 0.25s
+
+  &:hover
+    background $neon-cyan
+    color $bg-base
+    box-shadow 0 0 12px $neon-cyan-line
+
+.module-grid
+  display grid
+  gap 18px
+  grid-template-columns repeat(3, 1fr)
+
+  @media (max-width: 960px)
+    grid-template-columns repeat(2, 1fr)
+
+  @media (max-width: 560px)
+    grid-template-columns 1fr
+
+// ----------------------------------------------------------------------------
+// 通用卡片
+// ----------------------------------------------------------------------------
+.tile
+  background $bg-panel
+  border 1px solid $border
+  border-radius 10px
+  overflow hidden
+  transition all 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+  position relative
+
+  &::before
+    content ''
+    position absolute
+    top 0
+    left 0
+    right 0
+    height 1px
+    background linear-gradient(90deg, transparent, $neon-cyan, transparent)
+    opacity 0
+    transition opacity 0.3s
+    z-index 2
+
+  &:hover
+    border-color $neon-cyan-line
+    transform translateY(-4px)
+    box-shadow 0 12px 32px rgba(77, 208, 225, 0.18), 0 0 0 1px rgba(77, 208, 225, 0.1)
+
+    &::before
+      opacity 1
+
+    .tile-title
+      color $neon-cyan
+
+    .tile-cover
+      filter brightness(1.1)
+
+.tile-cover
+  height 110px
+  position relative
+  background-size cover !important
+  background-position center !important
+  display flex
+  align-items flex-end
+  padding 12px
+  transition filter 0.3s
+
+  &::after
+    content ''
+    position absolute
+    inset 0
+    background linear-gradient(180deg, transparent 30%, rgba(20, 24, 42, 0.6))
+    pointer-events none
+
+.tile-tag
+  position relative
+  z-index 1
+  background rgba(20, 24, 42, 0.8)
+  backdrop-filter blur(6px)
+  -webkit-backdrop-filter blur(6px)
+  color $neon-cyan
+  padding 4px 10px
+  border-radius 4px
+  font-size 11px
+  font-family $mono-font
+  border 1px solid $neon-cyan-line
+  letter-spacing 0.05em
+
+.tile-body
+  padding 14px 16px 16px
+
+.tile-title
+  font-size 15px
+  font-weight 600
+  color $text-main
+  margin 0 0 6px
+  line-height 1.4
+  display -webkit-box
+  -webkit-line-clamp 2
+  -webkit-box-orient vertical
+  overflow hidden
+  transition color 0.25s
+
+  &:hover
+    color $neon-cyan
+
+.tile-excerpt
+  font-size 12.5px
+  color $text-dim
+  line-height 1.6
+  margin 0 0 10px
+  display -webkit-box
+  -webkit-line-clamp 2
+  -webkit-box-orient vertical
+  overflow hidden
+
+.tile-meta
+  display flex
+  flex-wrap wrap
+  gap 10px
+  font-size 11px
+  color $text-dim
+  font-family $mono-font
+
+  time, span
+    display inline-flex
+    align-items center
+    gap 3px
+
+  i
+    font-size 11px
+
+.tile-tags
+  display flex
+  flex-wrap wrap
+  gap 5px
+  margin-top 8px
+
+.chip
+  font-size 10.5px
+  padding 2px 8px
+  border-radius 3px
+  background rgba(77, 208, 225, 0.1)
+  color $neon-cyan
+  font-family $mono-font
+  border 1px solid transparent
+  transition all 0.2s
+
+  &:hover
+    background $neon-cyan
+    color $bg-base
+    border-color $neon-cyan
+    transform translateY(-1px)
+
+.module-projects .tile
+  border-left 3px solid $neon-purple
+  &:hover
+    border-color $neon-purple
+    box-shadow 0 12px 32px $neon-purple-soft, 0 0 0 1px rgba(179, 157, 219, 0.1)
+
+.module-videos .tile
+  border-left 3px solid $neon-pink
+  &:hover
+    border-color $neon-pink
+    box-shadow 0 12px 32px $neon-pink-soft, 0 0 0 1px rgba(244, 143, 177, 0.1)
+
+.module-games .tile
+  border-left 3px solid $neon-cyan
+
+.module-posts .tile
+  border-left 3px solid $neon-cyan
+
+.tile-status
+  position absolute
+  top 12px
+  right 12px
+  z-index 1
+  padding 3px 8px
+  font-size 10px
+  font-family $mono-font
+  border-radius 3px
+  background rgba(20, 24, 42, 0.8)
+  backdrop-filter blur(6px)
+  -webkit-backdrop-filter blur(6px)
+
+  &.status-active
+    color $neon-cyan
+    border 1px solid $neon-cyan-line
+
+  &.status-wip
+    color #ffd54f
+    border 1px solid rgba(255, 213, 79, 0.4)
+
+  &.status-archived
+    color $text-dim
+    border 1px solid $border
+
+.tile-platform
+  display inline-block
+  margin-top 6px
+  padding 3px 8px
+  font-size 10px
+  font-family $mono-font
+  border-radius 3px
+  background $neon-pink-soft
+  color $neon-pink
+  border 1px solid rgba(244, 143, 177, 0.3)
+
+.tile-rating
+  display flex
+  align-items center
+  gap 4px
+  font-family $mono-font
+  font-size 11px
+  color #ffd54f
+  margin-top 6px
+
+.module-links
+  display grid
+  grid-template-columns repeat(2, 1fr)
+  gap 12px
+
+  @media (max-width: 560px)
+    grid-template-columns 1fr
+
+  a
+    display flex
+    align-items center
+    gap 10px
+    padding 12px 16px
+    background $bg-panel
+    border 1px solid $border
+    border-radius 8px
+    color $text-main
+    font-size 13px
+    transition all 0.25s
+    font-family $mono-font
+    position relative
+    overflow hidden
+
+    &::before
+      content '›'
+      color $neon-cyan
+      font-weight 700
+      font-size 16px
+      transition transform 0.25s
+
+    &:hover
+      border-color $neon-cyan
+      background $bg-panel-2
+      transform translateX(4px)
+      box-shadow 0 4px 16px rgba(77, 208, 225, 0.15)
+
+      &::before
+        transform translateX(2px)
+
+#pagination
+  display flex
+  justify-content center
+  margin-top 28px
+  font-family $mono-font
+
+  .page-number, .pagination a, .pagination span
+    color $text-main !important
+    border-radius 4px !important
+    background $bg-panel !important
+    border 1px solid $border !important
+    transition all 0.2s
+
+    &:hover
+      border-color $neon-cyan-line !important
+      box-shadow 0 0 8px $neon-cyan-soft
+
+  .pagination .current
+    background $neon-cyan !important
+    color $bg-base !important
+    border-color $neon-cyan !important
+
+// ============================================================================
+// 左下角常驻卡通少女（fixed 定位 + 轻微交互）
+// ============================================================================
+// ============================================================================
+// 左下角常驻卡通少女（fixed 定位 + 轻微交互）
+// 双重保险：inline style 在 index.ejs 里 + CSS 类规则
+// ============================================================================
+.character
+  position fixed !important
+  left 16px !important
+  bottom 16px !important
+  width 160px
+  height auto
+  z-index 999 !important
+  pointer-events auto
+  user-select none
+  display block
+
+  // 轻微呼吸动画
+  animation character-float 4s ease-in-out infinite
+
+  .character-img
+    width 100%
+    height auto
+    display block
+    filter drop-shadow(0 8px 24px rgba(77, 208, 225, 0.45))
+    border-radius 8px
+
+  // 鼠标悬浮时左右轻摆 + 放大
+  &:hover
+    animation character-sway 1.2s ease-in-out infinite
+
+    .character-img
+      filter drop-shadow(0 8px 32px rgba(77, 208, 225, 0.7))
+      transform scale(1.05)
+
+@keyframes character-float
+  0%, 100%
+    transform translateY(0) rotate(0deg)
+  25%
+    transform translateY(-6px) rotate(-1deg)
+  50%
+    transform translateY(-10px) rotate(0deg)
+  75%
+    transform translateY(-6px) rotate(1deg)
+
+@keyframes character-sway
+  0%, 100%
+    transform rotate(0deg) scale(1.05)
+  25%
+    transform rotate(-4deg) scale(1.05) translateY(-4px)
+  50%
+    transform rotate(0deg) scale(1.08) translateY(-8px)
+  75%
+    transform rotate(4deg) scale(1.05) translateY(-4px)
+
+// ============================================================================
+// 背景粒子层（CSS box-shadow 多点 + 上升漂浮动画）
+// ============================================================================
+.bg-particles
+  position fixed
+  inset 0
+  pointer-events none
+  z-index 0
+  overflow hidden
+
+  .particle
+    position absolute
+    width 4px
+    height 4px
+    border-radius 50%
+    background $neon-cyan
+    opacity 0
+    box-shadow 0 0 6px $neon-cyan, 0 0 12px rgba(77, 208, 225, 0.4)
+    animation particle-rise 12s linear infinite
+
+    // 12 个粒子在屏幕随机位置上升
+    &:nth-child(1)
+      left 5%
+      top 110vh
+      animation-delay 0s
+      animation-duration 14s
+      background $neon-cyan
+    &:nth-child(2)
+      left 15%
+      top 110vh
+      animation-delay 2s
+      animation-duration 11s
+      background $neon-cyan
+    &:nth-child(3)
+      left 25%
+      top 110vh
+      animation-delay 4s
+      animation-duration 13s
+      background $neon-purple
+      width 3px
+      height 3px
+    &:nth-child(4)
+      left 35%
+      top 110vh
+      animation-delay 1s
+      animation-duration 15s
+      background $neon-cyan
+      width 5px
+      height 5px
+      box-shadow 0 0 8px $neon-cyan, 0 0 16px rgba(77, 208, 225, 0.6)
+    &:nth-child(5)
+      left 48%
+      top 110vh
+      animation-delay 3s
+      animation-duration 12s
+      background $neon-cyan
+    &:nth-child(6)
+      left 58%
+      top 110vh
+      animation-delay 5s
+      animation-duration 14s
+      background $neon-pink
+      width 3px
+      height 3px
+      box-shadow 0 0 6px $neon-pink, 0 0 12px rgba(244, 143, 177, 0.5)
+    &:nth-child(7)
+      left 68%
+      top 110vh
+      animation-delay 7s
+      animation-duration 10s
+      background $neon-cyan
+    &:nth-child(8)
+      left 78%
+      top 110vh
+      animation-delay 2.5s
+      animation-duration 13s
+      background $neon-purple
+      width 4px
+      height 4px
+    &:nth-child(9)
+      left 88%
+      top 110vh
+      animation-delay 4.5s
+      animation-duration 12s
+      background $neon-cyan
+      width 6px
+      height 6px
+      box-shadow 0 0 10px $neon-cyan, 0 0 20px rgba(77, 208, 225, 0.7)
+    &:nth-child(10)
+      left 95%
+      top 110vh
+      animation-delay 6s
+      animation-duration 11s
+      background $neon-cyan
+    &:nth-child(11)
+      left 42%
+      top 110vh
+      animation-delay 8s
+      animation-duration 14s
+      background $neon-pink
+      width 3px
+      height 3px
+    &:nth-child(12)
+      left 72%
+      top 110vh
+      animation-delay 9.5s
+      animation-duration 13s
+      background $neon-cyan
+
+@keyframes particle-rise
+  0%
+    transform translateY(0) translateX(0)
+    opacity 0
+  10%
+    opacity 0.8
+  50%
+    transform translateY(-50vh) translateX(15px)
+  90%
+    opacity 0.6
+  100%
+    transform translateY(-110vh) translateX(-10px)
+    opacity 0
+
+// ============================================================================
+// 滚动条
+// ============================================================================
+::-webkit-scrollbar
+  width 8px
+  height 8px
+
+::-webkit-scrollbar-track
+  background $bg-base
+
+::-webkit-scrollbar-thumb
+  background $border
+  border-radius 4px
+
+  &:hover
+    background $neon-cyan-line
+
+// ============================================================================
+// 全局悬浮提示 tooltip（CSS-only，基于 title 属性 + data-tip）
+// ============================================================================
+[data-tip],
+[title]:not([title=""]):not([title="Toggle navigation"]):not([title="Search"]):not([title="Color Toggle"]):not([title="TOP"])
+  position relative
+
+  &::after
+    content attr(data-tip) attr(title)
+    position absolute
+    bottom calc(100% + 10px)
+    left 50%
+    transform translateX(-50%) translateY(4px)
+    padding 6px 12px
+    background rgba(15, 20, 36, 0.95)
+    color $text-main
+    font-size 12px
+    font-family $mono-font
+    border 1px solid $neon-cyan-line
+    border-radius 6px
+    white-space nowrap
+    opacity 0
+    pointer-events none
+    transition opacity 0.2s ease, transform 0.2s ease
+    z-index 9999
+    box-shadow 0 4px 16px rgba(0, 0, 0, 0.5)
+    letter-spacing 0.02em
+
+  &:hover::after
+    opacity 1
+    transform translateX(-50%) translateY(0)
+
+// 数据徽章等小元素不需要 tooltip
+.tile-tag, .chip, .module-name-en, .tile-platform, .tile-rating, .tile-status
+  &::after
+    display none !important
