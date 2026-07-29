@@ -583,14 +583,14 @@ home:
     # 博客模块（type=posts 自动从 _posts 拉取）
     - type: posts
       title: 博客
-      title_en: BLOG
-      subtitle: 最新文章 · from _posts
+      title_en: 
+      subtitle: 最新文章
       more_link: /archives/
 
     # 项目模块
     - type: projects
       title: 项目
-      title_en: PROJECTS
+      title_en: 
       subtitle: 一些作品
       items:
         - title: Hexo 博客
@@ -617,7 +617,7 @@ home:
     # 视频模块（链接到外部）
     - type: videos
       title: 视频
-      title_en: VIDEOS
+      title_en: 
       subtitle: 我的视频合集 · 跳转外部平台
       items:
         - title: B 站频道
@@ -641,7 +641,7 @@ home:
     # 游戏模块
     - type: games
       title: 游戏
-      title_en: GAMES
+      title_en: 
       subtitle: 在玩 / 通关 / 想玩
       items:
         - title: 黑神话：悟空
