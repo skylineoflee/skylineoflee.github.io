@@ -4,13 +4,13 @@ date: 2026-07-28 09:00:00
 layout: about
 ---
 
-## 你好，我是 skkai 👋
+## 你好，我是 古道青阳 👋
 
 一个普通的程序员 / 写点代码 / 记录生活。
 
 ## 关于本站
 
-本站基于 [Hexo](https://hexo.io/) 构建，主题是 [Fluid](https://hexo.fluid-dev.com/)，部署在 [Gitee Pages](https://gitee.com/)。
+本站基于 [Hexo](https://hexo.io/) 构建，主题是 [Fluid](https://hexo.fluid-dev.com/)，部署在 [Github Pages](https://github.com/)。
 
 主要用来记录：
 
@@ -20,8 +20,8 @@ layout: about
 
 ## 联系我
 
-- 🐙 Gitee：[skkai](https://gitee.com/skkai)
-- 📧 Email：hi@example.com
+- 🐙 Github：[skylineoflee](https://github.com/skylineoflee)
+- 📧 Email：skylineoflee@yeah.net
 
 ---
 

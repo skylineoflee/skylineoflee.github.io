@@ -29,11 +29,11 @@ categories:
 
 ## 关于技术选型
 
-最后选了 **Hexo + Fluid + Gitee Pages**：
+最后选了 **Hexo + Fluid + Github Pages**：
 
 - **Hexo**：老牌静态博客框架，中文资料多
 - **Fluid**：Material Design 风格，深色模式看着舒服
-- **Gitee Pages**：国内访问快，不被墙
+- **Github Pages**：国内访问快，不被墙
 
 没有选 VuePress / Hugo / Notion / WordPress，主要是因为 **简单**。Hexo 配 Fluid 主题，30 分钟就能跑起来，这对我这种"动手前先想半天"的人来说很重要。
 

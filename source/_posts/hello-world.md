@@ -6,9 +6,9 @@ tags:
   - Hexo
 ---
 
-欢迎来到 **skkai** 的个人博客。这是第一篇文章，主要用来介绍一下本站。
+欢迎来到 **古道青阳** 的个人博客。这是第一篇文章，主要用来介绍一下本站。
 
-本站基于 [Hexo](https://hexo.io/) 构建，使用 [Fluid](https://hexo.fluid-dev.com/) 主题，部署在 [Gitee Pages](https://gitee.com/) 上。
+本站基于 [Hexo](https://hexo.io/) 构建，使用 [Fluid](https://hexo.fluid-dev.com/) 主题，部署在 [Github Pages](https://github.com/) 上。
 
 <!-- more -->
 
@@ -32,7 +32,7 @@ hexo server
 # 生成静态文件
 hexo generate
 
-# 部署到 Gitee Pages
+# 部署到 Github Pages
 hexo deploy
 ```
 

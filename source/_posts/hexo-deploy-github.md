@@ -15,7 +15,7 @@ categories:
 ## 一、前置准备
 
 - 一个 Gitee 账号（已实名认证才能开启 Pages）
-- 一个形如 `<用户名>.gitee.io` 的公开仓库
+- 一个形如 `<用户名>.github.io` 的公开仓库
 - 本机已安装 Node.js（≥ 14）和 Git
 
 ## 二、Hexo 项目初始化

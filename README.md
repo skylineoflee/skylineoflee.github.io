@@ -1,6 +1,6 @@
 # skylineoflee.github.io
 
-skylineoflee 的个人博客，基于 Hexo + Fluid 主题构建，托管在 GitHub Pages。
+古道青阳 的个人博客，基于 Hexo + Fluid 主题构建，托管在 GitHub Pages。
 
 ## 简介
 
