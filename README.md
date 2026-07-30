@@ -90,9 +90,29 @@ hexo server
 hexo new "文章标题"
 ```
 
-### 生成静态文件
+### 图片转换为 WebP
+
+使用 Pillow 将 PNG 图片转换为 WebP，先安装依赖：
 
 ```bash
+pip install Pillow
+```
+
+在项目根目录执行：
+
+```bash
+python -c "from PIL import Image; Image.open('source/img/input.png').convert('RGBA').save('source/img/output.webp', 'WEBP', quality=80, method=6)"
+```
+
+将 `input.png` 和 `output.webp` 替换为实际文件名。转换后可检查文件格式和大小：
+
+```bash
+python -c "from PIL import Image; from pathlib import Path; p=Path('source/img/output.webp'); im=Image.open(p); print(im.format, im.size, p.stat().st_size)"
+```
+
+> 不要只修改文件扩展名。PNG 重命名为 `.webp` 后仍然是 PNG，必须经过实际编码转换。
+
+### 生成静态文件
 npm run build
 # 或
 hexo generate
