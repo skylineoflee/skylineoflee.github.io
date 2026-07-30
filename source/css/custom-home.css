@@ -601,8 +601,8 @@ body.home-page main {
 .character {
   position: fixed !important;
   left: 16px !important;
-  bottom: 16px !important;
-  width: 160px;
+  bottom: 1px !important;
+  width: 80px;
   height: auto;
   z-index: 999 !important;
   pointer-events: auto;
