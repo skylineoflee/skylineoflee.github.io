@@ -44,10 +44,6 @@ var colorSchema = theme.dark_mode && theme.dark_mode.enable && theme.dark_mode.d
       </a>
     <% } %>
 
-    <% if (theme.search.enable) { %>
-      <%- partial('_partials/search.ejs') %>
-    <% } %>
-
     <% if (theme.custom_html) { %>
       <div class="col-lg-7 mx-auto nopadding-x-md">
         <div class="container custom mx-auto">
@@ -60,6 +56,10 @@ var colorSchema = theme.dark_mode && theme.dark_mode.enable && theme.dark_mode.d
   <footer>
     <%- inject_point('footer') %>
   </footer>
+
+  <% if (theme.search.enable) { %>
+    <%- partial('_partials/search.ejs') %>
+  <% } %>
 
   <!-- Scripts -->
   <%- partial('_partials/scripts.ejs') %>

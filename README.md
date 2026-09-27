@@ -1,6 +1,6 @@
 # skylineoflee.github.io
 
-古道青阳 的个人博客，基于 Hexo + Fluid 主题构建，托管在 GitHub Pages。
+古道青阳 的个人博客，基于 Hexo + Fluid 主题构建，托管在 [GitHub Pages](https://pages.github.com/)。
 
 ## 简介
 
@@ -8,44 +8,40 @@
 
 主要内容包括：
 
-- 📚 学习笔记与读书摘抄
-- 💻 JavaScript / 前端技术笔记
-- 🌱 生活随想
-- 🎮 游戏 / 视频 / 项目展示
+- 📚 学习笔记与技术分享（Qt / 密码学 / 字符编码 / 前端）
+- 💻 开源项目展示（Gitee 托管）
+- 🎮 游戏 / 视频 / 生活随想
 
 ## 技术栈
 
 - **静态站点生成器**: [Hexo](https://hexo.io/) 7.x
-- **主题**: [Fluid](https://hexo.fluid-dev.com/)
+- **主题**: [Fluid](https://hexo.fluid-dev.com/)（已做深度定制，含自定义首页模块）
 - **托管平台**: [GitHub Pages](https://pages.github.com/)
-- **CI/CD**: GitHub Actions（推送到 `main` 分支自动部署）
-- **评论系统**: [Giscus](https://giscus.app)（基于 GitHub Discussions）
-- **访问统计**: [Umami Analytics](https://umami.is)
-- **数学公式渲染**: KaTeX
+- **CI/CD**: GitHub Actions（`.github/workflows/static.yml`，推送到 `main` 分支自动构建部署）
+- **统计**: 不蒜子（busuanzi，无需注册）footer 真实 PV/UV + 文章阅读量（localStorage 自嗨计数）
 
 ## 功能特性
 
-- ✅ 深色模式（默认跟随系统偏好）
+- ✅ 永久深色模式（无明暗切换）
 - ✅ 本地搜索
 - ✅ 代码高亮 + 一键复制
 - ✅ 文章目录（TOC）+ 锚点导航
 - ✅ 字数统计 + 阅读时长估算
 - ✅ 图片懒加载 + 点击放大
 - ✅ Open Graph 社交分享元信息
-- ✅ 赛博朋克风格自定义首页
-- ✅ 打字机副标题动画
+- ✅ 赛博朋克风格自定义首页（博客 / 项目 / 视频 / 游戏 / 友链 五大模块）
 - ✅ 加载进度条
+- ✅ 404 页面自动跳转首页
 
 ## 目录结构
 
 ```
 ├── _config.yml              # Hexo 全局配置
-├── _config.fluid.yml        # Fluid 主题配置
-├── CNAME                    # GitHub Pages 自定义域名（当前为空）
-├── package.json             # 项目依赖与脚本
-│
+├── _config.fluid.yml        # Fluid 主题配置（含自定义首页模块 home.modules）
 ├── .github/workflows/
-│   └── static.yml           # GitHub Actions CI/CD
+├── .gitattributes           # 统一 LF 行尾 + UTF-8 声明，避免跨平台乱码
+├── package.json             # 项目依赖与脚本
+├── compile-css.bat          # Windows 编译自定义样式脚本（styl → css）
 │
 ├── scaffolds/               # 新建内容模板
 │   ├── draft.md
@@ -53,19 +49,18 @@
 │   └── post.md
 │
 ├── source/
-│   ├── _posts/              # 博客文章
-│   │   ├── first-blog-thinking.md
-│   │   ├── js-tips.md
-│   │   ├── hexo-deploy-github.md
-│   │   └── hello-world.md
+│   ├── _posts/              # 博客文章（Markdown）
 │   ├── about/index.md       # 关于页
 │   ├── _styl/               # Stylus 源文件
-│   │   └── custom-home.styl
+│   │   └── custom-home.styl # 首页模块样式（赛博朋克风）
 │   ├── css/                 # 编译后的 CSS
-│   │   └── custom-home.css
-│   └── img/                 # 图片资源
+│   │   └── custom-home.css  # 站点实际引用的样式产物
+│   ├── js/                  # 自定义前端脚本
+│   │   ├── site-pv-uv.js    # 站点 PV/UV 计数
+│   │   └── post-visits.js   # 文章阅读量
+│   └── img/                 # 图片资源（WebP / SVG）
 │
-└── themes/fluid/            # Fluid 主题源码（含 layout / scripts / source）
+└── themes/fluid/            # Fluid 主题源码（vendored，含 layout 自定义）
 ```
 
 ## 使用方式
@@ -82,6 +77,7 @@ npm install
 npm run server
 # 或
 hexo server
+# Windows 下可直接运行 restart-hexo.bat
 ```
 
 ### 新建文章
@@ -90,29 +86,24 @@ hexo server
 hexo new "文章标题"
 ```
 
-### 图片转换为 WebP
+### 自定义首页样式
 
-使用 Pillow 将 PNG 图片转换为 WebP，先安装依赖：
+首页模块样式源文件位于 `source/_styl/custom-home.styl`，修改后需编译为 CSS：
 
-```bash
-pip install Pillow
-```
-
-在项目根目录执行：
+**Windows 双击 `compile-css.bat`**（自动执行：styl → 编译 → 写入 `source/css/custom-home.css`），或手动：
 
 ```bash
-python -c "from PIL import Image; Image.open('source/img/input.png').convert('RGBA').save('source/img/output.webp', 'WEBP', quality=80, method=6)"
+npx hexo render source/_styl/custom-home.styl --silent > source/css/custom-home.css
 ```
 
-将 `input.png` 和 `output.webp` 替换为实际文件名。转换后可检查文件格式和大小：
-
-```bash
-python -c "from PIL import Image; from pathlib import Path; p=Path('source/img/output.webp'); im=Image.open(p); print(im.format, im.size, p.stat().st_size)"
-```
-
-> 不要只修改文件扩展名。PNG 重命名为 `.webp` 后仍然是 PNG，必须经过实际编码转换。
+> 站点通过 `custom_css: [/css/custom-home.css]`（根目录 `_config.fluid.yml`）引入编译产物。
+> 注意：`hexo render` 把 CSS 输出到 **stdout**（不写 public/），必须手动重定向到 `source/css/custom-home.css`；
+> 且必须加 `--silent`，否则 stdout 里会混入带 ANSI 色码的日志行，污染 CSS 导致浏览器解析失败。
+> ⚠ 所有源文件（.styl/.md/.yml 等）请保持 **UTF-8 无 BOM** 编码，行尾统一 LF（`.gitattributes` 已声明），避免跨平台 diff 乱码。
 
 ### 生成静态文件
+
+```bash
 npm run build
 # 或
 hexo generate
@@ -120,20 +111,20 @@ hexo generate
 
 ### 部署
 
-项目通过 GitHub Actions 自动部署：
+项目通过 GitHub Actions 自动部署（已配置 `.github/workflows/static.yml`）：
 
 - 推送到 `main` 分支后触发
-- 工作流见 `.github/workflows/static.yml`
-- 输出路径为 `public/`
+- CI 流程：`actions/checkout@v4` → `setup-node@v4`（Node 20）→ `npm ci` → `hexo clean` → `hexo generate`
+- 输出路径为 `public/`（作为 Pages artifact 上传并发布）
 
-如需手动部署到 GitHub Pages，可运行：
+> 远程仓库 `origin` 即 GitHub（`github.com/skylineoflee/skylineoflee.github.io.git`），推送到 `main` 分支即触发 Pages 自动构建。
+
+如需手动构建：
 
 ```bash
 npm run clean && npm run build
 ```
 
-然后将 `public/` 目录内容上传至 GitHub Pages 对应分支。
-
 ---
 
-更多详细内容请参考 [官方指南](https://hexo.fluid-dev.com/docs/)。
+更多详细内容请参考 [Fluid 官方指南](https://hexo.fluid-dev.com/docs/)。

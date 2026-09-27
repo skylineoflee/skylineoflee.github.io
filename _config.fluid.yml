@@ -1,7 +1,7 @@
 #---------------------------
 # Hexo Theme Fluid
 # Author: Fluid-dev
-# Github: https://github.com/fluid-dev/hexo-theme-fluid
+# github: https://github.com/fluid-dev/hexo-theme-fluid
 #
 # 配置指南: https://hexo.fluid-dev.com/docs/guide/
 # 你可以从指南中获得更详细的说明
@@ -60,11 +60,14 @@ code:
     lib: "highlightjs"
 
     highlightjs:
-      # 在链接中挑选 style 填入
-      # Select a style in the link
-      # See: https://highlightjs.org/demo/
-      style: "github gist"
-      style_dark: "dark"
+      # 站点整体强制深色，两种模式统一用 github-dark，避免浅色模式下代码块白底与全站不搭
+      style: "github-dark"
+      style_dark: "github-dark"
+      # 代码块/行号公共背景色（--highlight-bg-color），浅色模式默认 #f6f8fa、深色默认 #2d333b，统一为 github-dark 的底色
+      light:
+        backgroundColor: "#0d1117"
+      dark:
+        backgroundColor: "#0d1117"
 
     prismjs:
       # 在下方链接页面右侧的圆形按钮挑选 style 填入，也可以直接填入 css 链接
@@ -83,7 +86,7 @@ fun_features:
   # 为 subtitle 添加打字机效果
   # Typing animation for subtitle
   typing:
-    enable: true
+    enable: false
 
     # 打印速度，数字越大越慢
     # Typing speed, the larger the number, the slower
@@ -129,10 +132,11 @@ fun_features:
 # Theme dark mode. If enable, a switch button will appear on the menu, each of the visitor's browser will store his switch option
 dark_mode:
   enable: true
-  # 默认的选项（当用户手动切换后则不再按照默认模式），选择 `auto` 会优先遵循 prefers-color-scheme，其次按用户本地时间 18 点到次日 6 点之间进入暗色模式
+  # 站点已固定为永久深色：default 设为 dark，切换按钮已在 navigation.ejs 移除，
+  # color-schema.js 中强制 current = 'dark'，访客存储的明暗偏好会被忽略并清除
   # Default option (when the visitor switches manually, the default mode is no longer followed), choosing `auto` will give priority to prefers-color-scheme, and then enter the dark mode from 18:00 to 6:00 in the visitor's local time
   # Options: auto | light | dark
-  default: auto
+  default: dark
 
 # 主题颜色配置，其他不生效的地方请使用自定义 css 解决，配色可以在下方链接中获得启发
 # Theme color, please use custom CSS to solve other colors, color schema can be inspired by the links below
@@ -143,76 +147,76 @@ color:
   body_bg_color: "#eee"
   # 暗色模式下的 body 背景色，下同
   # Color in dark mode, the same below
-  body_bg_color_dark: "#0d1117"
+  body_bg_color_dark: "#0A0A0B"
 
   # 顶部菜单背景色
   # Color of navigation bar background
   navbar_bg_color: "#2f4154"
-  navbar_bg_color_dark: "#161b22"
+  navbar_bg_color_dark: "#0A0A0B"
 
   # 顶部菜单字体色
   # Color of navigation bar text
   navbar_text_color: "#fff"
-  navbar_text_color_dark: "#58a6ff"
+  navbar_text_color_dark: "#E8E8EA"
 
   # 副标题字体色
   # Color of subtitle text
   subtitle_color: "#fff"
-  subtitle_color_dark: "#58a6ff"
+  subtitle_color_dark: "#22C55E"
 
   # 全局字体色
   # Color of global text
   text_color: "#3c4858"
-  text_color_dark: "#c9d1d9"
+  text_color_dark: "#E8E8EA"
 
   # 全局次级字体色（摘要、简介等位置）
   # Color of global secondary text (excerpt, introduction, etc.)
   sec_text_color: "#718096"
-  sec_text_color_dark: "#8b949e"
+  sec_text_color_dark: "#8A8A92"
 
   # 主面板背景色
   # Color of main board
-  board_color: "#fff"
-  board_color_dark: "#161b22"
+  board_color: "#f4f6fa"
+  board_color_dark: "#0A0A0B"
 
   # 文章正文字体色
   # Color of post text
   post_text_color: "#2c3e50"
-  post_text_color_dark: "#c9d1d9"
+  post_text_color_dark: "#E8E8EA"
 
   # 文章正文字体色（h1 h2 h3...）
   # Color of Article heading (h1 h2 h3...)
   post_heading_color: "#1a202c"
-  post_heading_color_dark: "#58a6ff"
+  post_heading_color_dark: "#E8E8EA"
 
   # 文章超链接字体色
   # Color of post link
   post_link_color: "#0366d6"
-  post_link_color_dark: "#58a6ff"
+  post_link_color_dark: "#22C55E"
 
   # 超链接悬浮时字体色
   # Color of link when hovering
   link_hover_color: "#30a9de"
-  link_hover_color_dark: "#79c0ff"
+  link_hover_color_dark: "#4ADE80"
 
   # 超链接悬浮背景色
   # Color of link background when hovering
   link_hover_bg_color: "#f8f9fa"
-  link_hover_bg_color_dark: "#364151"
+  link_hover_bg_color_dark: "rgba(34, 197, 94, 0.1)"
 
   # 分隔线和表格边线的颜色
   # Color of horizontal rule and table border
   line_color: "#eaecef"
-  line_color_dark: "#435266"
+  line_color_dark: "rgba(255, 255, 255, 0.1)"
 
   # 滚动条颜色
   # Color of scrollbar
   scrollbar_color: "#c4c6c9"
-  scrollbar_color_dark: "#687582"
+  scrollbar_color_dark: "rgba(255, 255, 255, 0.15)"
   # 滚动条悬浮颜色
   # Color of scrollbar when hovering
   scrollbar_hover_color: "#a6a6a6"
-  scrollbar_hover_color_dark: "#9da8b3"
+  scrollbar_hover_color_dark: "#22C55E"
 
   # 按钮背景色
   # Color of button
@@ -221,7 +225,7 @@ color:
   # 按钮悬浮背景色
   # Color of button when hovering
   button_hover_bg_color: "#f2f3f5"
-  button_hover_bg_color_dark: "#46647e"
+  button_hover_bg_color_dark: "rgba(34, 197, 94, 0.15)"
 
 # 主题字体配置
 # Font
@@ -234,11 +238,13 @@ font:
 # 指定自定义 .js 文件路径，支持列表；路径是相对 source 目录，如 /js/custom.js 对应存放目录 source/js/custom.js
 # Specify the path of your custom js file, support list. The path is relative to the source directory, such as `/js/custom.js` corresponding to the directory `source/js/custom.js`
 custom_js:
+  - /js/links-qr.js
 
 # 指定自定义 .css 文件路径，用法和 custom_js 相同
 # The usage is the same as custom_js
 custom_css:
   - /css/custom-home.css
+  - /css/links-qr.css
 # Analysis of website visitors
 web_analytics:
   enable: true
@@ -304,8 +310,8 @@ web_analytics:
     src: https://cloud.umami.is/script.js
 
     # umami 的 website id，需要在 umami 后台创建站点后获取
-    # umami website id, get after create website in umami
-    website_id: YOUR_UMAMI_WEBSITE_ID
+    # 留空则不加载统计脚本（analytics.ejs 会跳过 umami）
+    website_id:
 
     # 如果你只想统计特定的域名可以填入此字段，多个域名通过逗号分隔，这可以避免统计 localhost。
     # If you only want to tracker to specific domains you can fill in this field, multiple domain names are separated by commas, which can avoid tracker localhost
@@ -460,15 +466,9 @@ open_graph:
 # Footer
 #---------------------------
 footer:
-  # 页脚第一行文字的 HTML，建议保留 Fluid 的链接，用于向更多人推广本主题
-  # HTML of the first line of the footer, it is recommended to keep the Fluid link to promote this theme to more people
-  content: '
-    <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
-    <i class="iconfont icon-love"></i>
-    <a href="https://hexo.fluid-dev.com/" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
-    <br>
-    <span>由 古道青阳 用 <i class="iconfont icon-love"></i> 搭建</span>
-  '
+# 页脚第一行文字的 HTML，建议保留 Fluid 的链接，用于向更多人推广本主题
+  # HTML of the first line of the footer, it is recommended to keep the Fluid link to promote this theme to promote this theme to more people
+  content: ''
 
   # 展示网站的 PV、UV 统计数
   # Display website PV and UV statistics
@@ -477,7 +477,8 @@ footer:
 
     # 统计数据来源，使用 leancloud, umami, openkounter 需要设置 `web_analytics` 中对应的参数；使用 busuanzi 不需要额外设置，但是有时不稳定，另外本地运行时 busuanzi 显示统计数据很大属于正常现象，部署后会正常
     # Data source. If use leancloud, umami, openkounter, you need to set the parameter in `web_analytics`
-    # Options: busuanzi | leancloud | umami | openkounter
+    # Options: busuanzi | leancloud | umami | openkounter | custom
+    # custom: 纯本地 localStorage 自嗨计数（只有访客自己能看到自己的数字）
     source: "busuanzi"
 
   # 国内大陆服务器的备案信息
@@ -593,26 +594,26 @@ home:
       title_en: 
       subtitle: 一些作品
       items:
-        - title: Hexo 博客
-          desc: 基于 Hexo + Fluid 的个人博客，部署在 GitHub Pages。
-          link: https://skylineoflee.github.io/
+        - title: video_create
+          desc: 基于中文文稿的纯脚本视频制作管线，自动生成 1080p 带字幕的讲解类 MP4。
+          link: https://gitee.com/skkai/video_create
           status: active
           status_text: ACTIVE
-          tags: [Hexo, Fluid]
+          tags: [Video, TTS, FFmpeg]
 
-        - title: 个人工具箱
-          desc: 日常小工具集合，纯前端实现。
-          link: https://example.com/tools
-          status: wip
-          status_text: WIP
-          tags: [Tools]
+        - title: DuiLib_Ultimate
+          desc: Duilib 旗舰版，高清屏、多语言、样式表、异形窗口、阴影、简单动画。
+          link: https://gitee.com/skkai/DuiLib_Ultimate
+          status: active
+          status_text: ACTIVE
+          tags: [Duilib, C++, Windows]
 
-        - title: 算法练习
-          desc: LeetCode 题解笔记。
-          link: https://example.com/algo
-          status: archived
-          status_text: ARCHIVED
-          tags: [Algorithm]
+        - title: Luckfox Pico SDK
+          desc: 基于瑞芯微官方 SDK 定制的 Luckfox Pico 系列开发板 SDK，提供更好的编程体验。
+          link: https://gitee.com/skkai/luckfox-pico
+          status: active
+          status_text: ACTIVE
+          tags: [Luckfox, Embedded, C]
 
     # 视频模块（链接到外部）
     - type: videos
@@ -622,21 +623,13 @@ home:
       items:
         - title: B 站频道
           desc: 技术分享、游戏实况、生活记录。
-          link: https://space.bilibili.com/
+          link: https://space.bilibili.com/3546585092852276
           platform: B站
-          cover: /img/cover-bilibili.svg
 
         - title: 抖音
           desc: 短视频合集。
           link: https://www.douyin.com/
           platform: 抖音
-          cover: /img/cover-douyin.svg
-
-        - title: YouTube 镜像
-          desc: 海外搬运与备份。
-          link: https://www.youtube.com/
-          platform: YouTube
-          cover: /img/cover-youtube.svg
 
     # 游戏模块
     - type: games
@@ -644,40 +637,33 @@ home:
       title_en: 
       subtitle: 在玩 / 通关 / 想玩
       items:
-        - title: 黑神话：悟空
-          desc: 国产 3A，动作 RPG。
-          link: https://store.steampowered.com/app/2358720/
-          rating: 9.0
-          platform: Steam
-          tags: [动作, RPG]
-
-        - title: 艾尔登法环
-          desc: 开放世界魂类。
-          link: https://store.steampowered.com/app/1245620/
-          rating: 9.5
-          platform: Steam
-          tags: [魂类, RPG]
-
-        - title: 塞尔达传说：王国之泪
-          desc: Switch 独占开放世界神作。
-          link: https://www.nintendo.com/
-          rating: 10.0
-          platform: Switch
-          tags: [开放世界, 神作]
+        # 本地小游戏（可在线玩）
+        - title: 大鱼吃小鱼
+          desc: 本地小游戏：控制大鱼吃掉小鱼，不断成长。
+          link: /games/big-fish-eat-small-fish/
+          status: playable
+          status_text: 本地可玩
+          platform: Web
+          tags: [休闲, 本地]
 
     # 友情链接模块（type=links，2 列）
     - type: links
       title: 友情链接
-      title_en: FRIENDS
+      title_en: 
       items:
-        - title: Hexo 中文网
-          link: https://hexo.io/zh-cn/
-        - title: Fluid 主题
-          link: https://hexo.fluid-dev.com/
-        - title: Github Pages
-          link: https://github.com/
-        - title: 阿里云
-          link: https://www.aliyun.com/
+        - title: B 站
+          link: https://space.bilibili.com/3546585092852276
+          desc: 我的视频主页 · 技术分享、游戏实况、生活记录
+        - title: 点格成灯（微信小游戏）
+          link: "#qrcode-diangedeng"
+          desc: 悬停显示二维码，微信扫码即玩
+          qr: /img/qr-diagcd.webp
+          qr_text: 微信小游戏《点格成灯》 · 扫码即玩
+        - title: 硅基时刻（微信小程序）
+          link: "#qrcode-guojisike"
+          desc: 悬停显示二维码，微信扫码体验
+          qr: /img/qr-gjsk.webp
+          qr_text: 微信小程序《硅基时刻》 · 扫码体验
 
 
 #---------------------------
@@ -686,8 +672,8 @@ home:
 #---------------------------
 post:
   banner_img: /img/default.webp
-  banner_img_height: 70
-  banner_mask_alpha: 0.3
+  banner_img_height: 28
+  banner_mask_alpha: 0.15
 
   # 文章在首页的默认封面图，当没有指定 index_img 时会使用该图片，若两者都为空则不显示任何图片
   # Path of the default post cover when `index_img` is not set. If both are empty, no image will be displayed
@@ -722,9 +708,11 @@ post:
       # 每个字词的长度，建议：中文≈2，英文≈5，中英混合可自行调节
       # Average word length (chars count in word), ZH ≈ 2, EN ≈ 5
       awl: 2
-      # 每分钟阅读字数，如果大部分是技术文章可适度调低
-      # Words per minute
-      wpm: 60
+      # 每分钟阅读字数。
+      # 英文用户 60-250 合适；中文用户建议 250-400（汉字/分钟）。
+      # 调高会缩短"分钟数"，调低则变长。
+      # Words per minute. English: 60-250; Chinese: 250-400.
+      wpm: 300
 
     # 浏览量计数
     # Number of visits
@@ -897,8 +885,8 @@ post:
 #---------------------------
 
 # Utterances
-# 基于 GitHub Issues
-# Based on GitHub Issues
+# 基于 github Issues
+# Based on github Issues
 # See: https://utteranc.es
 utterances:
   repo:
@@ -925,8 +913,8 @@ disqus:
   adminLabel:
 
 # Gitalk
-# 基于 GitHub Issues
-# Based on GitHub Issues
+# 基于 github Issues
+# Based on github Issues
 # See: https://github.com/gitalk/gitalk#options
 gitalk:
   clientID:
@@ -1027,8 +1015,8 @@ cusdis:
   lang: zh-cn
 
 # Giscus
-# 基于 GitHub Discussions，类似于 Utterances
-# Based on GitHub Discussions, similar to Utterances
+# 基于 github Discussions，类似于 Utterances
+# Based on github Discussions, similar to Utterances
 # See: https://giscus.app/
 giscus:
   repo:
@@ -1119,14 +1107,16 @@ about:
   banner_mask_alpha: 0.3
   avatar: /img/avatar.webp
   name: "古道青阳"
-  intro: "一个普通的程序员 / 写点代码 / 记录生活"
+  intro: "指尖初叩零壹门，不觉青丝覆雪深。\n若问此生何所证，半生指针半生尘。"
   # 更多图标可从 https://hexo.fluid-dev.com/docs/icon/ 查找，`class` 代表图标的 css class，添加 `qrcode` 后，图标不再是链接而是悬浮二维码
   # More icons can be found from https://hexo.fluid-dev.com/docs/en/icon/  `class` is the css class of the icon. If adding `qrcode`, the icon is no longer a link, but a hovering QR code
   icons:
-    - { class: "iconfont icon-steam", link: "/#games", tip: "游戏" }
-    - { class: "iconfont icon-bilibili", link: "/#videos", tip: "视频" }
+    - { class: "iconfont icon-th-large", link: "/#games", tip: "游戏" }
+    - { class: "iconfont icon-eye", link: "/#videos", tip: "视频" }
     - { class: "iconfont icon-books", link: "/#blog", tip: "博客" }
     - { class: "iconfont icon-briefcase", link: "/#projects", tip: "项目" }
+    - { class: "iconfont icon-wxgame", link: "#qrcode-diangedeng", tip: "微信小游戏点格成灯", qr: "/img/qr-diagcd.webp", qr_text: "微信小游戏《点格成灯》\n微信扫码即玩" }
+    - { class: "iconfont icon-mini-program-fill", link: "#qrcode-guojisike", tip: "微信小程序硅基时刻", qr: "/img/qr-gjsk.webp", qr_text: "微信小程序《硅基时刻》\n微信扫码体验" }
 
 
 #---------------------------
@@ -1169,22 +1159,22 @@ links:
   # Member item of page
   items:
     - {
-      title: "Hexo 中文网",
-      intro: "快速、简洁且高效的博客框架",
-      link: "https://hexo.io/zh-cn/",
+      title: "B 站",
+      intro: "我的 B 站主页 · 技术分享、游戏实况、生活记录",
+      link: "https://space.bilibili.com/3546585092852276",
       avatar: "/img/avatar.webp"
     }
     - {
-      title: "Fluid 主题文档",
-      intro: "Fluid 主题中文使用指南",
-      link: "https://hexo.fluid-dev.com/docs/",
-      avatar: "/img/avatar.webp"
+      title: "点格成灯（微信小游戏）",
+      intro: '悬停显示二维码，微信扫码即玩<span class="qr-float"><img src="/img/qr-diagcd.webp" alt="点格成灯小游戏码"></span>',
+      link: "#qrcode-diangedeng",
+      avatar: "/img/qr-diagcd.webp"
     }
     - {
-      title: "GitHub Pages",
-      intro: "静态网站托管服务",
-      link: "https://pages.github.com/",
-      avatar: "/img/avatar.webp"
+      title: "硅基时刻（微信小程序）",
+      intro: '悬停显示二维码，微信扫码体验<span class="qr-float"><img src="/img/qr-gjsk.webp" alt="硅基时刻小程序码"></span>',
+      link: "#qrcode-guojisike",
+      avatar: "/img/qr-gjsk.webp"
     }
 
   # 当成员头像加载失败时，替换为指定图片
@@ -1195,7 +1185,7 @@ links:
   # Custom content at the bottom of the links
   custom:
     enable: true
-    content: '<hr><p>欢迎互换友链，如果你也是写技术或生活博客的朋友，可以评论区留言申请。</p>'
+    content: '<hr><p>欢迎互换友链！如果你也是写技术或生活博客的朋友，请将站点名称、简介与链接发送邮件申请（邮箱可在「关于」页找到），审核通过后会尽快添加。</p>'
 
   # 评论插件
   # Comment plugin

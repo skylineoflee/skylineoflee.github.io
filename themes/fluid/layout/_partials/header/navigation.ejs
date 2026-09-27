@@ -1,6 +1,7 @@
 <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="<%= url_for() %>">
+      <img class="navbar-brand-avatar" src="<%= url_for('/img/avatar.webp') %>" alt="avatar">
       <strong><%= theme.navbar.blog_title || config.title %></strong>
     </a>
 
@@ -57,13 +58,7 @@
           </li>
           <% import_js(theme.static_prefix.internal_js, 'local-search.js') %>
         <% } %>
-        <% if(theme.dark_mode && theme.dark_mode.enable) { %>
-          <li class="nav-item" id="color-toggle-btn">
-            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
-              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
-            </a>
-          </li>
-        <% } %>
+        <%# 站点已固定为永久深色模式，明暗切换按钮已移除（color-schema.js 中强制 dark） %>
       </ul>
     </div>
   </div>
@@ -125,18 +120,7 @@
             </a>
           </div>
         <% } %>
-        <% if(theme.dark_mode && theme.dark_mode.enable) { %>
-          <div class="col-4 mobile-grid-cell" id="mobile-color-toggle-btn"
-               data-label-light="<%= __('darkmode.light') %>"
-               data-label-dark="<%= __('darkmode.dark') %>">
-            <a href="javascript:;" aria-label="Color Toggle">
-              <div class="mobile-grid-item">
-                <i class="iconfont icon-dark" id="mobile-color-toggle-icon"></i>
-                <span id="mobile-color-toggle-label"><%= __('darkmode.dark') %></span>
-              </div>
-            </a>
-          </div>
-        <% } %>
+        <%# 站点已固定为永久深色模式，移动端明暗切换格子已移除 %>
       </div>
     </div>
   </div>

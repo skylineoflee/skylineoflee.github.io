@@ -12,7 +12,7 @@ language: zh-CN
 timezone: 'Asia/Shanghai'
 
 # URL
-## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
+## Set your site url here. For example, if you use github Page, set url as 'https://username.github.io/project'
 url: https://skylineoflee.github.io/
 root: /
 permalink: :year/:month/:day/:title/
@@ -82,7 +82,8 @@ meta_generator: true
 date_format: YYYY-MM-DD
 time_format: HH:mm:ss
 ## updated_option supports 'mtime', 'date', 'empty'
-updated_option: 'mtime'
+## 用 mtime 会在换机器/CI clone 后因文件修改时间变化导致"更新时间"失真
+updated_option: 'date'
 
 # Pagination
 ## Set per_page to 0 to disable pagination
@@ -99,3 +100,20 @@ ignore:
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 theme: fluid
+
+# Search
+## hexo-generator-search 插件配置（生成 /local-search.xml 供主题搜索使用）
+search:
+  path: local-search.xml
+  field: post
+  content: true
+  format: xml
+
+# Server
+server:
+  port: 4000
+
+# Sitemap（hexo-generator-sitemap 插件生成，供搜索引擎抓取）
+sitemap:
+  path: sitemap.xml
+  rel: false

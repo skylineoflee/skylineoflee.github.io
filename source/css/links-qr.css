@@ -1,0 +1,152 @@
+/* ==========================================================================
+ * 二维码悬停浮层（友链卡片 / 首页资料卡图标 / 首页友链 tile / 关于页图标通用）
+ * 约定：
+ *   - 带 href="#qrcode-*" 的链接 或 .qr-trigger → 点击不跳转（links-qr.js 拦截）
+ *   - 内部 .qr-float 元素悬停显示二维码；hover 时 JS 给宿主容器加 .qr-lift，
+ *     解除 backdrop-filter/transform 造成的堆叠上下文，使浮层 z-index 能越过页脚
+ * 注意：浮层外观/尺寸选择器只挂在 .qr-float 本身（不依赖祖先），保持稳健
+ * ========================================================================== */
+
+a[href^="#qrcode"],
+.qr-trigger {
+  position: relative;
+  cursor: default;
+}
+
+/* 悬停提升时，宿主卡片临时移除堆叠上下文来源与裁剪 */
+.qr-lift {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform: none !important;
+  overflow: visible !important;
+  z-index: 1200 !important;
+}
+
+/* 侧栏是 flex column，卡片设了 min-height:0 才不会因 .qr-lift 的
+   overflow:visible 触发 flex 自动最小尺寸而悬停时突然变高（约 +57px 抖动） */
+.home-side .side-card {
+  min-height: 0;
+}
+
+/* 关于页图标容器为 inline 布局，需常态允许溢出 */
+.about-icons {
+  overflow: visible;
+}
+
+/* 微信小游戏定制图标：iconfont 库无"小游戏"品牌字形，自绘白色手柄字形，
+   用 mask + currentColor 继承文字颜色。尺寸与各页字体图标盒子严格等大
+   （首页 14px、关于页 24px），避免位图墨迹饱满造成的视觉超重 */
+i.icon-wxgame {
+  font-size: 0;
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+  background-color: currentColor;
+  -webkit-mask: url("/img/icon-wxgame.webp") center / contain no-repeat;
+  mask: url("/img/icon-wxgame.webp") center / contain no-repeat;
+}
+/* 关于页字体图标盒为 24px，位图等大；关于页是 inline 布局非 flex，
+   font-size:0 的 inline-block 基线比字体图标高 3px，手动下压对齐 */
+.about-icons i.icon-wxgame {
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: -3px;
+}
+
+/* 友链页 .link-intro 两行截断会裁掉浮层，仅对含二维码卡片解除 */
+.links a[href^="#qrcode"] .link-intro {
+  overflow: visible;
+  max-height: none;
+  -webkit-line-clamp: initial;
+}
+
+/* ---------- 浮层外观（不依赖祖先选择器） ---------- */
+.qr-float {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 0.4rem);
+  width: max-content;
+  padding: 0.5rem 0.5rem 0.4rem;
+  background: #fff;
+  border-radius: 0.6rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 1050;
+  transform: translateX(-50%) scale(0.92);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+
+/* 码图尺寸由 --qr-size 驱动；文字宽度不超过码图，避免图片右侧留白 */
+.qr-float img {
+  display: block;
+  width: var(--qr-size, 10rem);
+  height: var(--qr-size, 10rem);
+}
+
+.qr-float .qr-caption {
+  display: block;
+  margin: 0.4rem auto 0;
+  max-width: var(--qr-size, 10rem);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #444;
+  text-align: center;
+  white-space: pre-line; /* 尊重配置里 \n 显式换行 */
+}
+
+/* ---------- 显隐：悬停 / 聚焦 ---------- */
+.qr-trigger:hover .qr-float,
+.qr-trigger:focus .qr-float,
+a[href^="#qrcode"]:hover .qr-float,
+a[href^="#qrcode"]:focus .qr-float {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+}
+
+/* 侧栏图标较小：浮层右缘对齐图标，避免溢出屏幕右缘 */
+.side-social a[href^="#qrcode"] .qr-float {
+  --qr-size: 8.5rem;
+  left: auto;
+  right: 0;
+  transform: scale(0.92);
+}
+.side-social a[href^="#qrcode"]:hover .qr-float,
+.side-social a[href^="#qrcode"]:focus .qr-float {
+  transform: scale(1);
+}
+
+/* JS 判定下方视口空间不足时加 .qr-up：翻到锚点上方弹出 */
+.qr-float.qr-up {
+  top: auto;
+  bottom: calc(100% + 0.4rem);
+}
+
+/* ---------- 触屏设备无 hover：二维码在卡片内静态展开 ---------- */
+@media (hover: none) {
+  .qr-float {
+    position: static;
+    transform: none;
+    opacity: 1;
+    visibility: visible;
+    /* 触屏靠长按识别小程序码，不能沿用 none */
+    pointer-events: auto;
+    margin-top: 0.75rem;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    text-align: center;
+  }
+  .qr-float img {
+    margin: 0 auto;
+    width: 8.5rem;
+    height: 8.5rem;
+    border-radius: 0.6rem;
+  }
+  .qr-float .qr-caption {
+    max-width: 8.5rem;
+    color: var(--sec-text-color, #8A8A92);
+  }
+}

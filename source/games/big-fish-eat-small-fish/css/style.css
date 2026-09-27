@@ -1,0 +1,218 @@
+/* ============================================================
+   大鱼吃小鱼 - 样式
+   独立样式，全屏游戏区域，底部固定控制条
+   ============================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  background: #06121f;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #aee6f0;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* ---- 游戏容器：占满整个视口减去底部控制条高度 ---- */
+.game-container {
+  position: relative;
+  width: 100vw;
+  height: calc(100vh - 44px); /* 底部控制条 44px */
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+/* ---- 画布：100% 填充容器，DPR 由 renderer 处理 ---- */
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  background: #0b1e33;
+}
+
+/* ---- HUD（分数/体型）---- */
+.hud {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  background: rgba(6, 18, 31, 0.75);
+  border: 1px solid rgba(77, 208, 225, 0.3);
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+  font-size: 14px;
+  letter-spacing: 1px;
+  user-select: none;
+  z-index: 10;
+}
+
+.hud .label {
+  color: rgba(174, 230, 240, 0.6);
+}
+
+.hud .value {
+  color: #4dd0e1;
+  font-weight: 700;
+}
+
+/* ---- 开始/结束消息层 ---- */
+.message-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: rgba(6, 18, 31, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 20;
+  text-align: center;
+  padding: 20px;
+}
+
+.message-overlay.hidden {
+  display: none;
+}
+
+.message-text {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.5);
+}
+
+.message-text.hint {
+  font-size: 18px;
+  color: #aee6f0;
+  text-shadow: none;
+  font-weight: 400;
+}
+
+.btn {
+  padding: 14px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #06121f;
+  background: linear-gradient(135deg, #4dd0e1, #7c4dff);
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 20px rgba(77, 208, 225, 0.3);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(77, 208, 225, 0.5);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* ---- 底部固定控制提示条 ---- */
+.controls-hint {
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  height: 44px;
+  padding: 0 12px;
+  background: rgba(6, 18, 31, 0.95);
+  border-top: 1px solid rgba(77, 208, 225, 0.2);
+  font-size: 12px;
+  color: rgba(174, 230, 240, 0.7);
+  letter-spacing: 0.5px;
+  user-select: none;
+  z-index: 5;
+}
+
+.controls-hint kbd {
+  display: inline-block;
+  padding: 2px 8px;
+  margin: 0 2px;
+  background: rgba(77, 208, 225, 0.15);
+  border: 1px solid rgba(77, 208, 225, 0.3);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  color: #4dd0e1;
+}
+
+/* ---- 返回链接 ---- */
+.back-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  padding: 7px 14px;
+  background: rgba(6, 18, 31, 0.7);
+  border: 1px solid rgba(77, 208, 225, 0.3);
+  border-radius: 20px;
+  color: #aee6f0;
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.2s;
+  z-index: 30;
+  backdrop-filter: blur(6px);
+}
+
+.back-link:hover {
+  background: rgba(77, 208, 225, 0.15);
+  color: #4dd0e1;
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 768px) {
+  .message-text {
+    font-size: 24px;
+  }
+  .message-text.hint {
+    font-size: 14px;
+  }
+  .hud {
+    font-size: 12px;
+    padding: 6px 12px;
+    gap: 10px;
+  }
+  .back-link {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  .controls-hint {
+    font-size: 10px;
+  }
+  .controls-hint kbd {
+    padding: 1px 6px;
+    font-size: 10px;
+  }
+}
+
+@media (max-height: 500px) {
+  .controls-hint {
+    height: 36px;
+    flex: 0 0 36px;
+    font-size: 10px;
+  }
+  .game-container {
+    height: calc(100vh - 36px);
+  }
+}

@@ -69,3 +69,23 @@ var subtitle = page.subtitle || page.title
     })();
   </script>
 <% } %>
+
+<% if (is_post()) { %>
+  <%# 把 banner 里日期/字数+时间的左右位置对齐到文章卡片 .post-content 的实际边缘 %>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var pc = document.querySelector('.post-content');
+      var d2 = document.querySelector('.banner-text > div:nth-child(2)');
+      var d3 = document.querySelector('.banner-text > div:nth-child(3)');
+      if (!pc || !d2 || !d3) return;
+      var r = pc.getBoundingClientRect();
+      d2.style.left = r.left + 'px';
+      d3.style.right = (window.innerWidth - r.right) + 'px';
+      window.addEventListener('resize', function() {
+        var r2 = pc.getBoundingClientRect();
+        d2.style.left = r2.left + 'px';
+        d3.style.right = (window.innerWidth - r2.right) + 'px';
+      });
+    });
+  </script>
+<% } %>

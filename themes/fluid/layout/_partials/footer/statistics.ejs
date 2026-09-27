@@ -51,7 +51,30 @@
         <%- uv_texts[1] %>
       </span>
     <% } %>
-    <% import_js(theme.static_prefix.busuanzi, 'busuanzi.pure.mini.js', 'defer') %>
+    <script>
+      // 本地预览（localhost/127.0.0.1 等）不蒜子会返回全站累计的虚高值，
+      // 因此本地不加载不蒜子、直接显示 0；线上域名按需加载并正常显示真实数量。
+      (function () {
+        var LOCAL = ['localhost', '127.0.0.1', '0.0.0.0', '[::1]', '::1'];
+        if (LOCAL.indexOf(location.hostname) !== -1) {
+          var map = {
+            busuanzi_container_site_pv: 'busuanzi_value_site_pv',
+            busuanzi_container_site_uv: 'busuanzi_value_site_uv'
+          };
+          Object.keys(map).forEach(function (id) {
+            var container = document.getElementById(id);
+            if (container) container.style.display = '';
+            var value = document.getElementById(map[id]);
+            if (value) value.textContent = '0';
+          });
+          return;
+        }
+        var s = document.createElement('script');
+        s.defer = true;
+        s.src = '<%- (theme.static_prefix.busuanzi || '').replace(/\/+$/, '') %>/busuanzi.pure.mini.js';
+        document.head.appendChild(s);
+      })();
+    </script>
 
   <% } else if (theme.footer.statistics.source === 'umami') { %>
     <% if (pv_texts.length >= 2) { %>
@@ -69,6 +92,25 @@
       </span>
     <% } %>
     <% import_js(theme.static_prefix.internal_js, 'umami-view.js', 'defer') %>
+
+  <%# 自定义：纯客户端 PV/UV 计数（localStorage） %>
+  <% } else if (theme.footer.statistics.source === 'custom') { %>
+    <% if (pv_texts.length >= 2) { %>
+      <span id="local-site-pv" style="display: none">
+        <%- pv_texts[0] %>
+        <span id="local-site-pv-value">0</span>
+        <%- pv_texts[1] %>
+      </span>
+    <% } %>
+    <% if (uv_texts.length >= 2) { %>
+      <span id="local-site-uv" style="display: none">
+        <%- uv_texts[0] %>
+        <span id="local-site-uv-value">0</span>
+        <%- uv_texts[1] %>
+      </span>
+    <% } %>
+    <%# 客户端计数脚本：每次访问 +1 PV，每个新访客 +1 UV %>
+    <%- js('js/site-pv-uv.js') %>
   <% } %>
 
 </div>

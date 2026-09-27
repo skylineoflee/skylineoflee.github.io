@@ -1,230 +1,262 @@
 <%
 // ========================================================================
-// 首页（完全自定义 · 模块化架构）
-// 风格：Cyberpunk 2077 / Ghost in the Shell — 深紫黑 + 霓虹青/品红
+// 首页（WenXiBuddy 风格重构 v2 —— 排版对齐）
+// 风格：深色玻璃拟态 + 翡翠绿 + 双栏布局
 //
-// 模块系统说明：
-//   每个板块是独立的 <section class="module module-{type}">，
-//   从 theme.home.modules 数组读取配置，按 type 渲染对应内容。
-//   加新模块：只需在 _config.fluid.yml 加一条 {type, title, ...}，
-//   不需要修改本文件。
-//
-//  支持的 type：
-//   - posts    : 自动从 _posts 拉取最新文章
-//   - projects : 从 theme.home.modules[type].items 读取项目列表
-//   - videos   : 从 theme.home.modules[type].items 读取视频列表
-//   - games    : 从 theme.home.modules[type].items 读取游戏列表
-//   - links    : 从 theme.home.modules[type].items 读取链接列表
+// 布局结构：
+//   ┌──────────────────────────┬─────────────────────┐
+//   │  home-main（模块内容流）  │  home-side（固定面板）│
+//   │                          │  名片/统计/最新/标签  │
+//   └──────────────────────────┴─────────────────────┘
 // ========================================================================
 
 page.banner_img = ''
 page.banner_img_height = 0
 
-// 工具函数
-// hue 限制在 200-280（青→紫→品红），避开黄绿/红，赛博朋克冷色调
-function hueFromString(s) {
-  var h = 0;
-  for (var i = 0; i < s.length; i++) {
-    h = ((h << 5) - h) + s.charCodeAt(i);
-    h |= 0;
-  }
-  return (Math.abs(h) % 80) + 200;
-}
+// 全站数据（用于 hero 扇形 + 侧栏）
+var allPosts = site.posts.sort('date', -1).toArray();
+var recentPosts = allPosts.slice(0, 5);
+var fanPosts = allPosts.slice(0, 3);
+var postCount = site.posts.length;
+var tagCount = site.tags.length;
+var catCount = site.categories.length;
+
+// 标签云（按文章数排序取前 12）
+var tagList = site.tags.sort('length', -1).limit(12).toArray();
 %>
 
 <script>document.body.classList.add('home-page');</script>
 <h1 style="display:none"><%= config.title %></h1>
 
-<!-- 背景装饰层：浮动光球（动态） -->
-<div class="bg-orbs" aria-hidden="true">
-  <span class="orb orb-1"></span>
-  <span class="orb orb-2"></span>
-  <span class="orb orb-3"></span>
-</div>
 
-<!-- 粒子层：漂浮星点（CSS box-shadow 多点 + 动画） -->
-<div class="bg-particles" aria-hidden="true">
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-  <span class="particle"></span>
-</div>
-
-<!-- 左下角常驻卡通少女 -->
-<aside class="character" aria-label="卡通少女" style="position:fixed;left:16px;bottom:16px;z-index:999;">
-  <img src="<%= url_for('/img/avatar-character.webp') %>" alt="character" class="character-img">
-</aside>
 
 <!-- =========================================================== -->
-<!-- Hero 名片区（无终端，纯名片，紧凑）                          -->
+<!-- 双栏布局：主内容流 + 右侧固定面板                              -->
 <!-- =========================================================== -->
-<section class="hero-card">
-  <img src="<%= url_for(theme.about.avatar) %>" class="hero-avatar" alt="<%= theme.about.name %>">
-  <div class="hero-meta">
-    <h2 class="hero-name"><%= theme.about.name %></h2>
-    <p class="hero-tagline"><%= theme.about.intro %></p>
-    <% if (theme.about.icons && theme.about.icons.length) { %>
-      <div class="hero-social">
-        <% theme.about.icons.forEach(function(icon){ %>
-          <a href="<%= icon.link %>" rel="noopener" title="<%= icon.tip %>">
-            <i class="<%= icon.class %>"></i>
-          </a>
-        <% }) %>
-      </div>
-    <% } %>
-  </div>
-</section>
+<div class="home-layout">
 
-<!-- =========================================================== -->
-<!-- 模块化板块（按 _config.fluid.yml 的 home.modules 顺序渲染）   -->
-<!-- =========================================================== -->
-<%
-  var modules = (theme.home && Array.isArray(theme.home.modules)) ? theme.home.modules : [];
-%>
+  <!-- ==================== 主内容区（模块流） ==================== -->
+  <div class="home-main">
+    <%
+      var modules = (theme.home && Array.isArray(theme.home.modules)) ? theme.home.modules : [];
+    %>
 
-<% modules.forEach(function(mod){ %>
-  <% if (!mod || !mod.type || mod.enable === false) return; %>
+    <% modules.forEach(function(mod){ %>
+      <% if (!mod || !mod.type || mod.enable === false) return; %>
 
-  <section class="module module-<%= mod.type %>">
+      <!-- id 供侧栏名片锚点（/#blog 等）跳转；posts 模块对外叫 blog -->
+      <section class="module module-<%= mod.type %>" id="<%= mod.type === 'posts' ? 'blog' : mod.type %>">
 
-    <!-- 模块标题 -->
-    <header class="module-head">
-      <h2 class="module-title" data-tip="<%= mod.title || mod.type %> 板块">
-        <%= mod.title || mod.type %>
-        <% if (mod.title_en) { %>
-          <span class="module-name-en"><%= mod.title_en %></span>
-        <% } %>
-      </h2>
-      <% if (mod.subtitle) { %>
-        <p class="module-subtitle"><%= mod.subtitle %></p>
-      <% } else if (mod.more_link) { %>
-        <a href="<%= mod.more_link %>" class="module-more" data-tip="查看所有 <%= mod.title || mod.type %>">查看全部 →</a>
-      <% } %>
-    </header>
+        <!-- 模块标题 -->
+        <header class="module-head">
+          <h2 class="module-title" data-tip="<%= mod.title || mod.type %> 板块">
+            <%= mod.title || mod.type %>
+            <% if (mod.title_en) { %>
+              <span class="module-name-en"><%= mod.title_en %></span>
+            <% } %>
+          </h2>
+          <% if (mod.subtitle) { %>
+            <p class="module-subtitle"><%= mod.subtitle %></p>
+          <% } else if (mod.more_link) { %>
+            <a href="<%= mod.more_link %>" class="module-more" data-tip="查看所有 <%= mod.title || mod.type %>">查看全部 →</a>
+          <% } %>
+        </header>
 
-    <!-- ============== type=posts 自动从 _posts 拉取 ============== -->
-    <% if (mod.type === 'posts') { %>
-      <div class="module-grid">
-        <% page.posts.forEach(function(post){ %>
-          <%
-            var hue1 = hueFromString(post.path || post.title);
-            var hue2 = (hue1 + 35) % 80 + 200;
-            var cover = 'background: linear-gradient(135deg, hsl(' + hue1 + ', 18%, 22%) 0%, hsl(' + hue2 + ', 14%, 30%) 100%);';
-            var catName = '';
-            if (post.categories && post.categories.length && post.categories[0] && post.categories[0].name) {
-              catName = post.categories[0].name;
-            }
-          %>
-          <article class="tile">
-            <a href="<%= url_for(post.path) %>" class="tile-link" target="<%- theme.index.post_url_target %>" data-tip="阅读全文 · <%= post.title %>">
-              <div class="tile-cover" style="<%- cover %>">
-                <% if (catName) { %><span class="tile-tag"><%= catName %></span><% } %>
-              </div>
-              <div class="tile-body">
-                <h3 class="tile-title"><%= post.title %></h3>
-                <p class="tile-excerpt">
-                  <%- strip_html(post.description || post.excerpt || post.content).substring(0, 90).trim().replace(/\n/g, ' ') %>
-                </p>
-                <div class="tile-meta">
-                  <time><i class="iconfont icon-date"></i> <%- date(post.date, 'MM-DD') %></time>
-                  <span><i class="iconfont icon-clock"></i> <%- min2read(post, theme.post.meta.min2read) %>分</span>
-                </div>
-                <% if (post.tags && post.tags.length) { %>
-                  <div class="tile-tags">
-                    <% post.tags.forEach(function(t){ %>
-                      <span class="chip">#<%= t.name %></span>
-                    <% }) %>
+        <!-- ============== type=posts 自动从 _posts 拉取 ============== -->
+        <% if (mod.type === 'posts') { %>
+          <div class="module-grid">
+            <% page.posts.forEach(function(post){ %>
+              <%
+                var catName = '';
+                if (post.categories && post.categories.length && post.categories[0] && post.categories[0].name) {
+                  catName = post.categories[0].name;
+                }
+                var showTags = (post.tags || []).slice(0, 3);
+                var moreTagCount = (post.tags || []).length - showTags.length;
+                var pdate = post.date ? post.date.format('YYYY-MM-DD') : '';
+                var pcat = catName || 'POST';
+              %>
+              <article class="tile">
+                <a href="<%= url_for(post.path) %>" class="tile-link" target="<%- theme.index.post_url_target %>" data-tip="阅读全文 · <%= post.title %>">
+                  <div class="tile-body">
+                    <div class="tile-head">
+                      <h3 class="tile-title"><%= post.title %></h3>
+                      <span class="tile-cat"><%= pcat %></span>
+                    </div>
+                    <p class="tile-excerpt">
+                      <%- strip_html(post.description || post.excerpt || post.content).substring(0, 100).trim().replace(/\n/g, ' ') %><% if (strip_html(post.description || post.excerpt || post.content).length > 100) { %>…<% } %>
+                    </p>
+                    <div class="tile-meta">
+                      <% if (pdate) { %><span class="tile-date"><i class="iconfont icon-calendar"></i><%= pdate %></span><% } %>
+                      <% if (post.comments) { %><span class="dot">·</span><span><i class="iconfont icon-comment"></i>评论</span><% } %>
+                    </div>
+                    <% if (showTags.length) { %>
+                      <div class="tile-tags">
+                        <% showTags.forEach(function(t){ %>
+                          <span class="chip">#<%= t.name %></span>
+                        <% }) %>
+                        <% if (moreTagCount > 0) { %><span class="chip chip-more">+<%= moreTagCount %></span><% } %>
+                      </div>
+                    <% } %>
                   </div>
-                <% } %>
-              </div>
-            </a>
-          </article>
-        <% }) %>
+                </a>
+              </article>
+            <% }) %>
+          </div>
+          <%- partial('_partials/paginator') %>
+
+        <!-- ============== type=links（链接列表） ============== -->
+        <% } else if (mod.type === 'links') { %>
+          <% var linkItems = mod.items || []; %>
+          <% if (linkItems.length) { %>
+            <div class="module-grid">
+              <% linkItems.forEach(function(item){ %>
+                <article class="tile">
+                  <a href="<%= item.link || item.url || '#' %>" rel="noopener" class="tile-link" data-tip="<%= item.title || item.name %> · 访问">
+                    <% if (item.cover) { %>
+                      <div class="tile-cover" style="background-image: url('<%= url_for(item.cover) %>');"></div>
+                    <% } %>
+                    <div class="tile-body">
+                      <h3 class="tile-title"><%= item.title || item.name %></h3>
+                      <% if (item.desc) { %>
+                        <p class="tile-excerpt"><%= item.desc %></p>
+                      <% } %>
+                    </div>
+                    <% if (item.qr) { %><span class="qr-float"><img src="<%= url_for(item.qr) %>" alt="<%= item.title %>"><% if (item.qr_text) { %><span class="qr-caption"><%= item.qr_text %></span><% } %></span><% } %>
+                  </a>
+                </article>
+              <% }) %>
+            </div>
+          <% } %>
+
+        <!-- ============== 通用 type：projects / videos / games ============== -->
+        <% } else { %>
+          <% var items = mod.items || []; %>
+          <% if (items.length) { %>
+            <div class="module-grid">
+              <% items.forEach(function(item){ %>
+                <article class="tile">
+                  <a href="<%= item.link || item.url || '#' %>" rel="noopener" class="tile-link" data-tip="<%= item.title || item.name %> · 跳转到外部">
+                    <% if (item.cover) { %>
+                      <div class="tile-cover" style="background-image: url('<%= url_for(item.cover) %>');"></div>
+                    <% } %>
+                    <div class="tile-body">
+                      <% if (item.status) { %>
+                        <span class="tile-status status-<%= item.status %>"><%= item.status_text || item.status %></span>
+                      <% } else if (item.tag) { %>
+                        <span class="tile-tag"><%= item.tag %></span>
+                      <% } %>
+                      <h3 class="tile-title"><%= item.title || item.name %></h3>
+                      <% if (item.desc || item.description || item.excerpt) { %>
+                        <p class="tile-excerpt"><%= item.desc || item.description || item.excerpt %></p>
+                      <% } %>
+
+                      <% if (mod.type === 'videos' && item.platform) { %>
+                        <span class="tile-platform"><%= item.platform %></span>
+                      <% } %>
+
+                      <% if (mod.type === 'games' && item.rating) { %>
+                        <div class="tile-rating">
+                          ★ <%= item.rating %><% if (item.platform) { %> · <%= item.platform %><% } %>
+                        </div>
+                      <% } %>
+
+                      <% if (item.tags && item.tags.length) { %>
+                        <div class="tile-tags">
+                          <% item.tags.forEach(function(t){ %>
+                            <span class="chip">#<%= t %></span>
+                          <% }) %>
+                        </div>
+                      <% } %>
+
+                      </div>
+                  </a>
+                </article>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <p style="color: #8A8A92; font-size: 13px;">（暂无内容）</p>
+          <% } %>
+        <% } %>
+
+      </section>
+    <% }) %>
+  </div>
+
+  <!-- ==================== 右侧固定面板 ==================== -->
+  <aside class="home-side">
+
+    <!-- 名片卡 -->
+    <div class="side-card side-card-profile">
+      <div class="side-profile-top">
+        <img src="<%= url_for(theme.about.avatar) %>" class="side-avatar" alt="<%= theme.about.name %>">
+        <div class="side-profile-name">
+          <span class="side-name"><%= theme.about.name %></span>
+        </div>
       </div>
-      <%- partial('_partials/paginator') %>
-
-    <!-- ============== type=links（链接列表，2 列） ============== -->
-    <% } else if (mod.type === 'links') { %>
-      <% var linkItems = mod.items || []; %>
-      <% if (linkItems.length) { %>
-        <div class="module-links">
-          <% linkItems.forEach(function(l){ %>
-            <a href="<%= l.link || l.url %>" rel="noopener" data-tip="<%= l.title || l.name %> · 访问">
-              <%= l.title || l.name %>
-            </a>
+      <p class="side-intro"><%= theme.about.intro %></p>
+      <% if (theme.about.icons && theme.about.icons.length) { %>
+        <div class="side-social">
+          <% theme.about.icons.forEach(function(icon){ %>
+            <a href="<%= icon.link %>" rel="noopener"<% if (!icon.qr) { %> title="<%= icon.tip %>"<% } %>><i class="<%= icon.class %>"></i><% if (icon.qr) { %><span class="qr-float"><img src="<%= url_for(icon.qr) %>" alt="<%= icon.tip %>"><% if (icon.qr_text) { %><span class="qr-caption"><%= icon.qr_text %></span><% } %></span><% } %></a>
           <% }) %>
         </div>
       <% } %>
+    </div>
 
-    <!-- ============== 通用 type：projects / videos / games / 自定义 ============== -->
-    <% } else { %>
-      <% var items = mod.items || []; %>
-      <% if (items.length) { %>
-        <div class="module-grid">
-          <% items.forEach(function(item){ %>
-            <%
-              var hue1 = hueFromString(item.link || item.title);
-              var hue2 = (hue1 + 40) % 80 + 200;
-              // 封面：优先 item.cover，否则用冷色低饱和渐变（赛博朋克）
-              var cover = '';
-              if (item.cover) {
-                cover = 'background-image: url(' + url_for(item.cover) + ');';
-              } else {
-                cover = 'background: linear-gradient(135deg, hsl(' + hue1 + ', 16%, 22%) 0%, hsl(' + hue2 + ', 12%, 30%) 100%);';
-              }
-            %>
-            <article class="tile">
-              <a href="<%= item.link || item.url || '#' %>" rel="noopener" class="tile-link" data-tip="<%= item.title || item.name %> · 跳转到外部">
-                <div class="tile-cover" style="<%- cover %>">
-                  <% if (item.status) { %>
-                    <span class="tile-status status-<%= item.status %>"><%= item.status_text || item.status %></span>
-                  <% } else if (item.tag) { %>
-                    <span class="tile-tag"><%= item.tag %></span>
-                  <% } %>
-                </div>
-                <div class="tile-body">
-                  <h3 class="tile-title"><%= item.title || item.name %></h3>
-                  <% if (item.desc || item.description || item.excerpt) { %>
-                    <p class="tile-excerpt"><%= item.desc || item.description || item.excerpt %></p>
-                  <% } %>
+    <!-- 数据统计卡 -->
+    <div class="side-card side-card-stats">
+      <div class="side-card-title">数据统计</div>
+      <div class="side-stats">
+        <div class="side-stat">
+          <span class="side-stat-num"><%= postCount %></span>
+          <span class="side-stat-label">文章</span>
+        </div>
+        <div class="side-stat">
+          <span class="side-stat-num"><%= catCount %></span>
+          <span class="side-stat-label">分类</span>
+        </div>
+        <div class="side-stat">
+          <span class="side-stat-num"><%= tagCount %></span>
+          <span class="side-stat-label">标签</span>
+        </div>
+      </div>
+    </div>
 
-                  <% if (mod.type === 'videos' && item.platform) { %>
-                    <span class="tile-platform"><%= item.platform %></span>
-                  <% } %>
-
-                  <% if (mod.type === 'games' && item.rating) { %>
-                    <div class="tile-rating">
-                      ★ <%= item.rating %><% if (item.platform) { %> · <%= item.platform %><% } %>
-                    </div>
-                  <% } %>
-
-                  <% if (item.tags && item.tags.length) { %>
-                    <div class="tile-tags">
-                      <% item.tags.forEach(function(t){ %>
-                        <span class="chip">#<%= t %></span>
-                      <% }) %>
-                    </div>
-                  <% } %>
-                </div>
+    <!-- 最新文章卡 -->
+    <% if (recentPosts.length) { %>
+      <div class="side-card side-card-recent">
+        <div class="side-card-title">最新文章</div>
+        <ul class="side-recent-list">
+          <% recentPosts.forEach(function(post, i){ %>
+            <li>
+              <a href="<%= url_for(post.path) %>" class="side-recent-item">
+                <span class="side-recent-index"><%= ('0' + (i + 1)).slice(-2) %></span>
+                <span class="side-recent-text">
+                  <span class="side-recent-title"><%= post.title %></span>
+                  <span class="side-recent-date"><%= post.date ? post.date.format('YYYY-MM-DD') : '' %></span>
+                </span>
               </a>
-            </article>
+            </li>
           <% }) %>
-        </div>
-      <% } else { %>
-        <p style="color: var(--text-dim, #6b7894); font-size: 13px;">（暂无内容）</p>
-      <% } %>
+        </ul>
+      </div>
     <% } %>
 
-  </section>
-<% }) %>
+    <!-- 标签云卡 -->
+    <% if (tagList.length) { %>
+      <div class="side-card side-card-tags">
+        <div class="side-card-title">标签云</div>
+        <div class="side-tag-cloud">
+          <% tagList.forEach(function(tag){ %>
+            <a href="<%= url_for(tag.path) %>" class="side-tag" data-count="<%= tag.length %>"><%= tag.name %></a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+  </aside>
+</div>
 
 <!-- ============================ 全局悬浮提示增强 ============================ -->
 <script>
@@ -247,11 +279,5 @@ function hueFromString(s) {
       if (t && t.length < 20) el.setAttribute('title', '翻页 ' + t);
     }
   });
-  // 角色：移到 <body> 直接子元素（脱离 main 的 stacking context）
-  var ch = document.querySelector('.character');
-  if (ch && ch.parentElement !== document.body) {
-    document.body.appendChild(ch);
-  }
-  if (ch && !ch.getAttribute('title')) ch.setAttribute('title', '～ (｡♥‿♥｡) ～');
 })();
 </script>

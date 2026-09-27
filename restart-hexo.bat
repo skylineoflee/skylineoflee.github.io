@@ -1,7 +1,8 @@
 @echo off
+setlocal enabledelayedexpansion
 chcp 65001 >nul
 title Hexo 重启工具
-cd /d e:\MY\skylineoflee.github.io
+cd /d e:\MY\gitee\skylineoflee.github.io
 
 echo ============================================
 echo            Hexo 本地服务器重启工具
@@ -39,6 +40,6 @@ echo       访问地址: http://localhost:4000/
 echo       按 Ctrl+C 可停止服务器
 echo ============================================
 echo.
-call npx hexo server
+call npx hexo server -p 4000
 
 pause

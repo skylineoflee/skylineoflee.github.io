@@ -82,8 +82,10 @@
   }
 
   function applyCustomColorSchemaSettings(schema) {
-    // 接受从「开关」处传来的模式，或者从 localStorage 读取，否则按默认设置值
-    var current = schema || getLS(colorSchemaStorageKey) || getDefaultColorSchema();
+    // 站点已固定为永久深色模式：忽略 localStorage 偏好与系统偏好，始终使用 dark。
+    // 该分支 current === getDefaultColorSchema() 成立时会走 resetSchemaAttributeAndLS()，
+    // 顺带清除访客浏览器里历史遗留的明暗偏好存储。
+    var current = 'dark';
 
     if (current === getDefaultColorSchema()) {
       // 当用户切换的显示模式和默认模式相同时，则恢复为自动模式

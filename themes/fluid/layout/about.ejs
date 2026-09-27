@@ -15,15 +15,22 @@ page.banner_mask_alpha = page.banner_mask_alpha || theme.about.banner_mask_alpha
       <% for(const each of theme.about.icons || []) { %>
         <% if (!each.class) continue; %>
         <% var cls = each.class %>
-        <% var isQr = each.qrcode %>
-        <a <%= isQr ? '' : ('href=' + url_for(each.link)) %> class="<%= isQr ? 'qr-trigger' : '' %>
-           <%= !isQr && each.tip ? 'hint--bottom hint--rounded' : '' %>"
-           <% if (!isQr && each.tip) { %>aria-label="<%= each.tip %>"<% } %>
-           target="<%= isQr ? '_self' : '_blank' %>"
+        <% var qrSrc = each.qr || each.qrcode %>
+        <% var isFloatQr = !!each.qr %>
+        <% var isQr = !!each.qrcode %>
+        <a <%= (isQr || isFloatQr) ? '' : ('href=' + url_for(each.link)) %> class="<%= (isQr || isFloatQr) ? 'qr-trigger' : '' %>
+           <%= !(isQr || isFloatQr) && each.tip ? 'hint--bottom hint--rounded' : '' %>"
+           <% if (!(isQr || isFloatQr) && each.tip) { %>aria-label="<%= each.tip %>"<% } %>
+           target="<%= (isQr || isFloatQr) ? '_self' : '_blank' %>"
         >
           <i class="<%= cls %>" aria-hidden="true"></i>
-          <% if (isQr) { %>
+          <% if (isQr && !isFloatQr) { %>
             <img class="qr-img" src="<%= url_for(each.qrcode) %>" alt="qrcode" />
+          <% } else if (isFloatQr) { %>
+            <span class="qr-float">
+              <img src="<%= url_for(qrSrc) %>" alt="<%= each.tip || 'qrcode' %>" />
+              <% if (each.qr_text) { %><span class="qr-caption"><%= each.qr_text %></span><% } %>
+            </span>
           <% } %>
         </a>
       <% } %>

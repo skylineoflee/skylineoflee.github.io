@@ -93,6 +93,9 @@ page.banner_mask_alpha = page.banner_mask_alpha || theme.post.banner_mask_alpha
 
 <%- partial('_partials/markdown-plugins') %>
 
+<%# 文章阅读量：纯客户端 localStorage 累加 %>
+<%- js('js/post-visits.js') %>
+
 <% if(theme.post.custom && theme.post.custom.enable && theme.post.custom.content && page.custom !== false) { %>
   <!-- Custom -->
   <div class="col-lg-7 mx-auto nopadding-x-md">

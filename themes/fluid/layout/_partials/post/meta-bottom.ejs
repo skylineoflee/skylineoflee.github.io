@@ -1,4 +1,11 @@
 <div class="post-metas my-3">
+  <%# 阅读量：在文章 front-matter 里设 visits: 数字 即可显示 %>
+  <% if (page.visits != null) { %>
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-eye" aria-hidden="true"></i>
+      <span>阅读量&nbsp;<span id="post-visits-value" data-slug="<%- page.path %>" data-base="<%- page.visits %>"><%- page.visits %></span></span>
+    </div>
+  <% } %>
   <% if (page.categories && page.categories.length > 0) { %>
     <div class="post-meta mr-3 d-flex align-items-center">
       <i class="iconfont icon-category"></i>

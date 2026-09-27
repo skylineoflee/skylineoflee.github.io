@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1e33"/>
+      <stop offset="100%" stop-color="#122a4d"/>
+    </linearGradient>
+    <linearGradient id="fishbody" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4dd0e1"/>
+      <stop offset="100%" stop-color="#7c4dff"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="640" height="360" fill="url(#bg)"/>
+
+  <!-- 网格线 -->
+  <g stroke="rgba(80,160,220,0.12)" stroke-width="1">
+    <line x1="0" y1="90" x2="640" y2="90"/>
+    <line x1="0" y1="180" x2="640" y2="180"/>
+    <line x1="0" y1="270" x2="640" y2="270"/>
+    <line x1="160" y1="0" x2="160" y2="360"/>
+    <line x1="320" y1="0" x2="320" y2="360"/>
+    <line x1="480" y1="0" x2="480" y2="360"/>
+  </g>
+
+  <!-- 气泡 -->
+  <g fill="none" stroke="rgba(77,208,225,0.25)" stroke-width="1.5">
+    <circle cx="80" cy="280" r="6"/>
+    <circle cx="100" cy="250" r="4"/>
+    <circle cx="560" cy="90" r="5"/>
+    <circle cx="540" cy="60" r="3"/>
+  </g>
+
+  <!-- 小鱼（被吃） -->
+  <g transform="translate(400, 195)" filter="url(#glow)">
+    <ellipse cx="0" cy="0" rx="34" ry="20" fill="#ff8a65"/>
+    <polygon points="-30,0 -52,-14 -52,14" fill="#ff8a65"/>
+    <circle cx="16" cy="-7" r="6" fill="#fff"/>
+    <circle cx="19" cy="-7" r="3" fill="#222"/>
+    <circle cx="16" cy="7" r="6" fill="#fff"/>
+    <circle cx="19" cy="7" r="3" fill="#222"/>
+  </g>
+
+  <!-- 大鱼（玩家，张嘴扑向小鱼） -->
+  <g transform="translate(270, 180)" filter="url(#glow)">
+    <!-- 尾巴 -->
+    <polygon points="-70,0 -105,-28 -105,28" fill="#5f9fe0"/>
+    <!-- 身体 -->
+    <path d="M -70,0
+             C -40,-42 40,-42 70,0
+             C 40,42 -40,42 -70,0 Z"
+          fill="url(#fishbody)"/>
+    <!-- 嘴巴（张开） -->
+    <path d="M 55,-14 L 95,-6 L 95,6 L 55,14 Z" fill="#0b1e33"/>
+    <!-- 牙齿 -->
+    <polygon points="60,-6 70,-10 70,-2" fill="#fff"/>
+    <polygon points="60,6 70,10 70,2" fill="#fff"/>
+    <!-- 眼睛 -->
+    <circle cx="38" cy="-16" r="12" fill="#fff"/>
+    <circle cx="42" cy="-16" r="6" fill="#111"/>
+    <!-- 背鳍 -->
+    <path d="M -20,-30 L -5,-58 L 10,-32 Z" fill="#6a9fe0"/>
+  </g>
+
+  <!-- 标题 -->
+  <text x="320" y="320" text-anchor="middle" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="34" font-weight="700" fill="#4dd0e1"
+        style="text-shadow: 0 0 20px rgba(77,208,225,0.6)">
+    大鱼吃小鱼
+  </text>
+  <text x="320" y="346" text-anchor="middle" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="14" fill="rgba(174,230,240,0.6)">
+    点击即玩 · 本地小游戏
+  </text>
+</svg>
