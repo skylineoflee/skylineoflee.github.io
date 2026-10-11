@@ -646,6 +646,15 @@ home:
           platform: Web
           tags: [休闲, 本地]
 
+        # 点格成灯 3D：GF(2) 线性代数解谜
+        - title: 点格成灯 3D
+          desc: 点击一张贴纸会翻转它所在面的十字邻域，六个面真耦合；高斯消元解 GF(2) 方程组求最优步数。
+          link: /games/lights-out-3d/
+          status: playable
+          status_text: 本地可玩
+          platform: Web
+          tags: [益智, 3D, 本地]
+
     # 友情链接模块（type=links，2 列）
     - type: links
       title: 友情链接

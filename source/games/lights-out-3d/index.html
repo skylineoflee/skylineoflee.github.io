@@ -1,0 +1,1203 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>点格成灯 · 3D 正多面体</title>
+<style>
+  :root{
+    --bg:#080A1A; --panel:#131935; --line:#28325C;
+    --ink:#E8F2FF; --inkDim:#93A6C8; --inkFaint:#5A6A92;
+    --gold:#3FE8FF; --red:#FF3D8B; --green:#2BE8A8; --blue:#5B7CFF;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    display:flex; flex-direction:column;
+    user-select:none; -webkit-user-select:none; touch-action:none;
+  }
+  header{padding:10px 14px 8px;border-bottom:1px solid var(--line);flex:none;
+    background:linear-gradient(180deg,#141C3C,#080A1A)}
+  .title{font-size:16px;font-weight:600;letter-spacing:.5px}
+  .title span{color:var(--gold);text-shadow:0 0 14px rgba(63,232,255,.55)}
+  .ctrls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center}
+  .chk{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--inkDim);
+       background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+  .chk input{accent-color:var(--gold);margin:0;width:13px;height:13px}
+  #tip{font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,Consolas,monospace}
+  select,button.ghost{
+    background:var(--panel);color:var(--ink);border:1px solid var(--line);
+    border-radius:8px;padding:6px 10px;font-size:12px;font-family:inherit;cursor:pointer;
+  }
+  button.ghost:active{background:#262233}
+
+  #stage{flex:1 1 auto;position:relative;min-height:0}
+  #cv{display:block;width:100%;height:100%}
+  #tip{
+    position:absolute;left:0;right:0;bottom:6px;text-align:center;
+    font-size:11px;color:#4E6B8A;pointer-events:none;letter-spacing:.4px;
+  }
+
+  #hud{display:flex;gap:1px;background:var(--line);border-top:1px solid var(--line);flex:none}
+  #hud .cell{flex:1;background:var(--panel);padding:7px 4px;text-align:center}
+  #hud .cell.wide{flex:1.7}
+  #hud b{display:block;font-size:17px;font-weight:600;line-height:1.25;
+    text-shadow:0 0 12px rgba(63,232,255,.30)}
+  #hud span{display:block;font-size:10px;color:var(--inkFaint)}
+  /* 面标记条：面数随立体变（4 ~ 20），必须允许换行。
+     二十面体 20 个 × 14px + 19 个 3px 间隙 = 337px 最小宽度；
+     不换行时这一条的 min-content 宽度会把 .cell.wide 的自动最小尺寸顶到 337px，
+     而 .cell.wide 是 flex:1.7 又没设 min-width:0 —— HUD 整行因此撑破视口，
+     再被 html,body 的 overflow:hidden 裁掉（手机上必现）。 */
+  #faces{display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin-bottom:2px}
+  #faces i{
+    width:14px;height:14px;border-radius:2px;border:1px solid #0009;
+    position:relative;font-style:normal;
+  }
+  #faces i.done::after{
+    content:'';position:absolute;inset:0;border-radius:2px;
+    background:#fff;mix-blend-mode:overlay;opacity:.55;
+  }
+
+  #tools{display:flex;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));flex:none}
+  #tools button{
+    flex:1;background:var(--panel);color:var(--ink);border:1px solid var(--line);
+    border-radius:10px;padding:10px 4px;font-size:13px;font-family:inherit;cursor:pointer;
+    position:relative;
+  }
+  #tools button:active{background:#2A2539}
+  #tools button[disabled]{opacity:.35;cursor:default}
+  #tools button i{
+    font-style:normal;font-size:10px;color:var(--inkFaint);display:block;margin-top:1px;
+  }
+
+  .modal{
+    position:fixed;inset:0;background:#000A;display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:10;backdrop-filter:blur(2px);
+  }
+  .modal.hidden{display:none}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:20px;max-width:460px;width:100%;max-height:82vh;overflow:auto;
+  }
+  .card h2{margin:0 0 14px;font-size:17px}
+  .card table{width:100%;border-collapse:collapse;font-size:12px}
+  .card td{padding:5px 0;border-bottom:1px solid var(--line);color:var(--inkDim)}
+  .card td:last-child{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+  .card .big{font-size:34px;text-align:center;color:var(--gold);letter-spacing:4px}
+  .card p.note{font-size:11px;color:var(--inkFaint);line-height:1.7;margin:14px 0 0}
+  .row{display:flex;gap:10px;margin-top:16px}
+  .row button{flex:1;padding:11px;border-radius:10px;border:1px solid var(--line);
+    background:var(--bg);color:var(--ink);font-family:inherit;font-size:14px;cursor:pointer}
+  .row button.pri{background:var(--gold);color:#231F10;border-color:var(--gold);font-weight:600}
+
+  /* ---- 返回博客链接（托管在博客内时提供；置于右上角避开标题与控制条） ---- */
+  .back-link{
+    position:fixed;top:10px;right:12px;z-index:30;
+    padding:6px 12px;border-radius:8px;text-decoration:none;
+    background:rgba(19,25,53,.78);border:1px solid rgba(63,232,255,.32);
+    color:var(--inkDim);font:inherit;font-size:12px;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    transition:background .2s,color .2s,border-color .2s;
+  }
+  .back-link:hover{
+    background:rgba(63,232,255,.14);color:var(--gold);border-color:var(--gold);
+  }
+  @media (max-width:768px){
+    .back-link{top:8px;right:8px;font-size:11px;padding:5px 9px}
+  }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="/">← 返回博客</a>
+
+<header>
+  <div class="title">点格成灯 · <span id="solidName">立方体</span></div>
+  <div class="ctrls">
+    <select id="selSolid" title="正多面体"></select>
+    <select id="selDiff" title="难度"></select>
+    <select id="selWin" title="通关配色">
+      <option value="six">通关配色：六色</option>
+      <option value="mono">通关配色：单色</option>
+    </select>
+    <select id="selAid" title="辅助">
+      <option value="0">色弱辅助：关</option>
+      <option value="1">色弱辅助：开</option>
+    </select>
+    <label class="chk"><input type="checkbox" id="invX">反转左右</label>
+    <label class="chk"><input type="checkbox" id="invY">反转上下</label>
+    <label class="chk" title="开（默认）：按外接球取常数缩放，立方体原地转、大小恒定，永不切边。&#10;关：每帧撑满画面，各朝向都比刚性模式大 25% 左右，但转动时大小会随朝向变化。"><input type="checkbox" id="rigid" checked>刚性缩放</label>
+    <button class="ghost" id="btnInfo">引擎</button>
+  </div>
+</header>
+
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <div id="tip">拖动旋转 · 点击翻转 · 方向键旋转 · Z 撤销 · N 换题</div>
+</div>
+
+<div id="hud">
+  <div class="cell"><b id="moves">0</b><span>步数</span></div>
+  <div class="cell"><b id="best">–</b><span>最优</span></div>
+  <div class="cell"><b id="stars">☆☆☆</b><span>评级</span></div>
+  <div class="cell wide"><div id="faces"></div><span>已完成面</span></div>
+</div>
+
+<div id="tools">
+  <button data-a="hint">💡 提示<i id="lh">2</i></button>
+  <button data-a="reveal">🔍 透视<i id="lr">1</i></button>
+  <button data-a="undo">↩️ 撤销<i id="lu">0</i></button>
+  <button data-a="reset">⟳ 复位视角</button>
+  <button data-a="new">🎲 换题</button>
+</div>
+
+<div class="modal hidden" id="winModal">
+  <div class="card">
+    <div class="big" id="winStars">★★★</div>
+    <h2 style="text-align:center" id="winTitle">点亮完成</h2>
+    <table>
+      <tr><td>本局步数</td><td id="w1">–</td></tr>
+      <tr><td>真·最优</td><td id="w2">–</td></tr>
+      <tr><td>是否完美</td><td id="w3">–</td></tr>
+    </table>
+    <div class="row">
+      <button id="winClose">看看棋盘</button>
+      <button class="pri" id="winAgain">再来一题</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="infoModal">
+  <div class="card">
+    <h2>GF(2) 引擎</h2>
+    <table>
+      <tr><td>贴纸变量</td><td id="i1">–</td></tr>
+      <tr><td>邻域大小</td><td id="i2">–</td></tr>
+      <tr><td>矩阵秩</td><td id="i3">–</td></tr>
+      <tr><td>零空间维数</td><td id="i4">–</td></tr>
+      <tr><td>每局面候选解</td><td id="i5">–</td></tr>
+      <tr><td>单次求解</td><td id="i6">–</td></tr>
+    </table>
+    <p class="note">
+      局面<b>恒由「从全亮态点若干下」生成</b>，故必有解。求解器做高斯消元后枚举零空间取最小权重解，
+      枚举上限 2²⁰（超过则退化为特解，此时报出的步数只是上界）。<br>
+      规则：每个面先按类型细分（三角面走 k 阶三角网格、正方形走 k×k、正五边形走面心扇形），
+      <b>细分网格里共边的两格互为邻居（含自身）</b>，点一格就翻这一整邻域。
+      棱上的格子因此<b>同时属于相邻的两个面</b>——各个面是真耦合的，不是各翻各的。
+    </p>
+    <div class="row"><button class="pri" id="infoClose">知道了</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================================
+   点格成灯 · 3D 模式原型
+   -------------------------------------------------------------------------
+   状态：54 张贴纸，每张二值 {0,1}。全 1 = 通关。
+   规则 J：点 (p,f) → ① 同一面上十字相邻的贴纸（自身 + 面内 4 向）
+                     ② 这块积木本身朝向其它面的贴纸
+           邻域恒为 5 格；rank 48 / nullity 6 ⇒ 每局面仅 2^6=64 个解，
+           真·最优步数可在 0.15ms 内算出，评星与纪录口径与 2D 一致。
+   ========================================================================= */
+
+/* ---------- 正多面体定义 ---------- */
+/* 配色走"赛博霓虹"：6 个色相 × 明/暗两档。V 全部归一化到**外接球半径 1**，
+   五种立体在画面里才占同样大小，比较才公平（立方体原数据就是 ±0.57735 = R 1）。 */
+const PALETTE = [
+  { col:'#8FEFFF', dim:'#2F86C4', cn:'冰蓝' },
+  { col:'#FF9E2C', dim:'#D2660F', cn:'琥珀' },
+  { col:'#2BE8A8', dim:'#0E9C74', cn:'翡翠' },
+  { col:'#4D6BFF', dim:'#2E45C8', cn:'群青' },
+  { col:'#FF3D8B', dim:'#C21C63', cn:'玫红' },
+  { col:'#B478FF', dim:'#7A3CC0', cn:'紫罗兰' },
+];
+/* 面 f 的颜色：12 槽循环，≥6 取暗档 —— 关掉时仍能认出是哪个面 */
+function faceColor(f){ const h=f%12; return h<6 ? PALETTE[h].col : PALETTE[h-6].dim; }
+/* 色弱辅助用的面标记：只有 6 个符号，立体面数多于 6 时改印面号 */
+function faceGlyph(f){ return TOPO.faces.length<=6 ? GLYPH[f] : String(f+1); }
+
+const SOLIDS = {
+  cube: {
+    cn:'立方体', sub:{quad:3},
+    V:[[-0.57735,-0.57735,-0.57735],[-0.57735,-0.57735,0.57735],[-0.57735,0.57735,-0.57735],[-0.57735,0.57735,0.57735],
+      [0.57735,-0.57735,-0.57735],[0.57735,-0.57735,0.57735],[0.57735,0.57735,-0.57735],[0.57735,0.57735,0.57735]],
+    F:[[2,0,1,3],[1,0,4,5],[4,0,2,6],[3,1,5,7],[6,2,3,7],[5,4,6,7]],
+  },
+  tetra: {
+    cn:'四面体', sub:{tri:4},
+    V:[[0.57735,0.57735,0.57735],[0.57735,-0.57735,-0.57735],[-0.57735,0.57735,-0.57735],[-0.57735,-0.57735,0.57735]],
+    F:[[2,0,1],[1,0,3],[3,0,2],[2,1,3]],
+  },
+  octa: {
+    cn:'八面体', sub:{tri:3},
+    V:[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]],
+    F:[[4,0,2],[2,0,5],[3,0,4],[5,0,3],[2,1,4],[5,1,2],[4,1,3],[3,1,5]],
+  },
+  dodeca: {
+    cn:'十二面体', sub:{fan:1},
+    V:[[-0.57735,-0.57735,-0.57735],[-0.57735,-0.57735,0.57735],[-0.57735,0.57735,-0.57735],[-0.57735,0.57735,0.57735],
+      [0.57735,-0.57735,-0.57735],[0.57735,-0.57735,0.57735],[0.57735,0.57735,-0.57735],[0.57735,0.57735,0.57735],
+      [0,0.356822,0.934172],[0,0.356822,-0.934172],[0,-0.356822,0.934172],[0,-0.356822,-0.934172],
+      [0.356822,0.934172,0],[0.356822,-0.934172,0],[-0.356822,0.934172,0],[-0.356822,-0.934172,0],
+      [0.934172,0,0.356822],[0.934172,0,-0.356822],[-0.934172,0,0.356822],[-0.934172,0,-0.356822]],
+    F:[[18,19,0,15,1],[9,11,0,19,2],[13,15,0,11,4],[3,18,1,10,8],
+      [5,10,1,15,13],[3,14,2,19,18],[6,9,2,14,12],[12,14,3,8,7],
+      [5,13,4,17,16],[6,17,4,11,9],[8,10,5,16,7],[16,17,6,12,7]],
+  },
+  icosa: {
+    cn:'二十面体', sub:{tri:2},
+    V:[[0,0.52573111,0.85065081],[0,0.52573111,-0.85065081],[0,-0.52573111,0.85065081],[0,-0.52573111,-0.85065081],
+      [0.52573111,0.85065081,0],[0.52573111,-0.85065081,0],[-0.52573111,0.85065081,0],[-0.52573111,-0.85065081,0],
+      [0.85065081,0,0.52573111],[0.85065081,0,-0.52573111],[-0.85065081,0,0.52573111],[-0.85065081,0,-0.52573111]],
+    F:[[0,2,8],[0,10,2],[0,4,6],[0,8,4],[0,6,10],[1,9,3],[1,3,11],[1,6,4],[1,4,9],[1,11,6],
+      [2,7,5],[2,5,8],[2,10,7],[3,5,7],[3,9,5],[3,7,11],[4,8,9],[5,9,8],[6,11,10],[7,10,11]],
+  },
+};
+const SOLID_ORDER = ['cube','tetra','octa','dodeca','icosa'];
+const GLYPH = ['▲','▼','●','■','◀','▶'];
+
+/* ---------- 面细分 ---------- */
+/* 把一个面（顶点下标环）细分，返回若干多边形。细分点按坐标归并（round 6 位）
+   ——相邻两面在公共棱上的细分点必须并成同一个顶点，否则网格不闭合、邻接在棱上断开。 */
+const mix3 = (a,b,t)=>[a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+function subdivideFace(V, ring, sub, vmap){
+  const intern = p => {
+    const key = p[0].toFixed(6)+','+p[1].toFixed(6)+','+p[2].toFixed(6);
+    if (!vmap.has(key)) vmap.set(key, { id:vmap.size, p:p.slice() });
+    return vmap.get(key).id;
+  };
+  const P = ring.map(i=>V[i]);
+  const out = [];
+  if (sub.tri){
+    const k = sub.tri, G = {};
+    for (let i=0;i<=k;i++) for (let j=0;j<=k-i;j++){
+      const l = k-i-j;
+      G[i+','+j] = intern([0,1,2].map(t=>(P[0][t]*i + P[1][t]*j + P[2][t]*l)/k));
+    }
+    for (let i=0;i<k;i++) for (let j=0;j<k-i;j++){
+      out.push([G[i+','+j], G[i+1+','+j], G[i+','+(j+1)]]);
+      if (j < k-i-1) out.push([G[i+1+','+j], G[i+1+','+(j+1)], G[i+','+(j+1)]]);
+    }
+  } else if (sub.quad){
+    const k = sub.quad, G = [];
+    for (let i=0;i<=k;i++){ G.push([]);
+      for (let j=0;j<=k;j++){ const t=i/k, u=j/k; G[i].push(intern(mix3(mix3(P[0],P[1],t), mix3(P[3],P[2],t), u))); } }
+    for (let i=0;i<k;i++) for (let j=0;j<k;j++) out.push([G[i][j],G[i+1][j],G[i+1][j+1],G[i][j+1]]);
+  } else if (sub.fan){
+    // 正五边形没有正方形那样规整的 k×k 网格，取 fan:1 = 面心 + 1 圈，
+    // 每面 5 个全等等腰三角形，内角 54/54/72，全凸无凹角，且每块跨一整条外边
+    // ⇒ 跨面天然闭合。k≥2 会同时出现三角和四边形两种形状，那时才不合格。
+    const c = P.reduce((a,p)=>[a[0]+p[0]/P.length, a[1]+p[1]/P.length, a[2]+p[2]/P.length], [0,0,0]);
+    const ci = intern(c), k = sub.fan || 1;
+    let prev = null;
+    for (let r=1;r<=k;r++){
+      const s = r/k;
+      const cur = P.map(p=>intern([0,1,2].map(t=>c[t]+(p[t]-c[t])*s)));
+      if (prev) for (let q=0;q<P.length;q++) out.push([prev[q],cur[q],cur[(q+1)%P.length],prev[(q+1)%P.length]]);
+      // 内圈退化成三角：不能写成 [ci,cur[q],cur[nq],ci]，收尾那个重复顶点会生成一条
+      // 零长棱，eMap 会把同心的三角两两连起来（度数直接翻倍）
+      else for (let q=0;q<P.length;q++) out.push([ci,cur[q],cur[(q+1)%P.length]]);
+      prev = cur;
+    }
+  }
+  return out;
+}
+
+/* ---------- 拓扑：格子 / 邻接 / 面 / 棱 ---------- */
+/* 规则：细分后的网格里**共边的两格互为邻居**（含自身）。
+   这个规则对立方体恰好等价于原先的「面内十字 + 同块积木其它面」，
+   实测两套规则的 rank/nullity 完全一致（48/6），所以泛化不改变立方体玩法。 */
+function buildSolid(key){
+  const S = SOLIDS[key];
+  const vmap = new Map(), polys = [];
+  for (let f=0; f<S.F.length; f++)
+    for (const v of subdivideFace(S.V, S.F[f], S.sub, vmap)) polys.push({ v, f });
+
+  const eMap = new Map();
+  polys.forEach((p,i)=>{
+    for (let q=0;q<p.v.length;q++){
+      const a=p.v[q], b=p.v[(q+1)%p.v.length];
+      const ek = a<b ? a+','+b : b+','+a;
+      if (!eMap.has(ek)) eMap.set(ek, []);
+      eMap.get(ek).push(i);
+    }
+  });
+  const adj = polys.map((_,i)=>[i]);
+  for (const list of eMap.values())
+    for (let a=0;a<list.length;a++) for (let b=a+1;b<list.length;b++){
+      adj[list[a]].push(list[b]); adj[list[b]].push(list[a]);
+    }
+  /* ★ 必须去重：邻接的语义是「共过边的两格互为邻居」，一对格子只该出现一次。
+     而"每条棱推一次"的做法在一对格子共享**两条**棱时会推两次 ——
+     applyFlip 是逐项 toggle，重复项翻两次等于没翻，会静默破坏规则。 */
+  for (let i=0;i<adj.length;i++){
+    if (adj[i].length < 3) continue;
+    const seen = new Set([i]), uniq = [i];
+    for (const j of adj[i]) if (!seen.has(j)){ seen.add(j); uniq.push(j); }
+    adj[i] = uniq;
+  }
+
+  const faces = S.F.map((ring,f)=>{
+    const c = ring.reduce((a,i)=>[a[0]+S.V[i][0]/ring.length, a[1]+S.V[i][1]/ring.length, a[2]+S.V[i][2]/ring.length],[0,0,0]);
+    const m = Math.hypot(c[0],c[1],c[2]) || 1;
+    return { n:[c[0]/m,c[1]/m,c[2]/m], c, ring, col: faceColor(f) };
+  });
+  const edges = [], seenE = new Set();
+  for (const ring of S.F) for (let q=0;q<ring.length;q++){
+    const a=ring[q], b=ring[(q+1)%ring.length];
+    const ek = a<b ? a+','+b : b+','+a;
+    if (seenE.has(ek)) continue;
+    seenE.add(ek); edges.push([a,b]);
+  }
+  return { key, cn:S.cn, cells:polys, adj, n:polys.length, faces, edges,
+           verts:[...vmap.values()].map(x=>x.p) };
+}
+
+let TOPO = buildSolid('cube');
+let N = TOPO.n;
+let FLIP = TOPO.adj;
+
+/* ---------- GF(2) 求解 ---------- */
+/* A / RANK / NULLITY 随立体切换重建（原先是常量，立方体时只有一份） */
+let A = [], RANK = 0, NULLITY = 0;
+const NULLITY_CAP = 20;
+
+function rankOf(){
+  const M = A.map(r=>Uint8Array.from(r));
+  let rk = 0;
+  for (let c=0; c<N && rk<N; c++){
+    let p=-1; for (let i=rk;i<N;i++) if (M[i][c]) { p=i; break; }
+    if (p<0) continue;
+    const t=M[rk]; M[rk]=M[p]; M[p]=t;
+    for (let i=0;i<N;i++) if (i!==rk && M[i][c]) for (let k=c;k<N;k++) M[i][k]^=M[rk][k];
+    rk++;
+  }
+  return rk;
+}
+/* 邻域大小直方图（信息面板用） */
+let NEI = {};
+/* 翻转时刻表：按格数分配，切立体后格数变了必须重建 */
+let anim = new Float64Array(N).fill(-1e9);
+
+/* 切换立体：重建拓扑、邻接矩阵、GF(2) 规模、动画表 */
+function activateSolid(key){
+  TOPO = buildSolid(key);
+  N = TOPO.n;
+  FLIP = TOPO.adj;
+  A = FLIP.map(s=>{ const r=new Uint8Array(N); for(const v of s) r[v]=1; return r; });
+  RANK = rankOf(); NULLITY = N - RANK;
+  NEI = FLIP.reduce((m,s)=>{ m[s.length]=(m[s.length]||0)+1; return m; }, {});
+  anim = new Float64Array(N).fill(-1e9);
+}
+activateSolid('cube');
+
+function applyMoves(sel){          // sel: Uint8Array of move flags → 变化向量 b
+  const b = new Uint8Array(N);
+  for (let c=0;c<N;c++) if (sel[c]) { const row = A[c]; for (let i=0;i<N;i++) if (row[i]) b[i]^=1; }
+  return b;
+}
+function solveOpt(b){
+  const M = A.map((row, rw)=>{ const r=new Uint8Array(N+1); r.set(row); r[N]=b[rw]?1:0; return r; });
+  const piv = []; let r = 0;
+  for (let c=0;c<N && r<N;c++){
+    let p=-1; for (let i=r;i<N;i++) if (M[i][c]) { p=i; break; }
+    if (p<0) continue;
+    const t=M[r]; M[r]=M[p]; M[p]=t;
+    for (let i=0;i<N;i++) if (i!==r && M[i][c]) for (let k=c;k<=N;k++) M[i][k]^=M[r][k];
+    piv[c] = r++;
+  }
+  for (let i=r;i<N;i++) if (M[i][N]) return null;
+  const P=[], Fr=[];
+  for (let c=0;c<N;c++) (piv[c]>=0 ? P : Fr).push(c);
+  const part = new Uint8Array(N);
+  for (const c of P) if (M[piv[c]][N]) part[c]=1;
+  const bas = Fr.map(fc=>{ const v=new Uint8Array(N); v[fc]=1; for(const c of P) if(M[piv[c]][fc]) v[c]=1; return v; });
+  const wt = v=>{ let s=0; for(let i=0;i<N;i++) s+=v[i]; return s; };
+  let bw = wt(part), best = part;
+  const exact = Fr.length <= NULLITY_CAP;
+  if (exact && Fr.length > 0){
+    const lim = 1<<Fr.length, cur = new Uint8Array(N);
+    for (let mk=1; mk<lim; mk++){
+      cur.set(part);
+      for (let k2=0;k2<Fr.length;k2++) if ((mk>>>k2)&1){ const bv=bas[k2]; for(let j2=0;j2<N;j2++) cur[j2]^=bv[j2]; }
+      const w = wt(cur); if (w<bw){ bw=w; best=cur.slice(); }
+    }
+  }
+  return { weight: bw, taps: best, exact };
+}
+
+/* ---------- 出题 ---------- */
+const DIFFS = [
+  { name:'简单 [3–5 步]',  lo:3,  hi:5  },
+  { name:'标准 [6–9 步]',  lo:6,  hi:9  },
+  { name:'困难 [10–13 步]', lo:10, hi:13 },
+  { name:'专家 [14–18 步]', lo:14, hi:18 },
+];
+const ITEM_QUOTA = { hint:2, reveal:1 };
+
+let state, moves, history, bestMoves, usedItem, items, bestTaps;
+let hintCell = null, revealSet = null;
+let solved = false;
+
+function newPuzzle(diffIdx){
+  const D = DIFFS[diffIdx];
+  let ok = false;
+  for (let attempt=0; attempt<400 && !ok; attempt++){
+    const w = D.lo + Math.floor(Math.random()*(D.hi-D.lo+1));
+    const sel = new Uint8Array(N), used = new Set();
+    let cnt = 0;
+    while (cnt < w){ const c = Math.floor(Math.random()*N); if (!used.has(c)){ used.add(c); sel[c]=1; cnt++; } }
+    const b = applyMoves(sel);
+    const sol = solveOpt(b);
+    if (!sol) continue;
+    if (sol.weight < D.lo || sol.weight > D.hi) continue;
+    state = b.map(v => v ? 0 : 1);       // b=需要翻转 → 翻转后全 1
+    moves = 0; history = []; usedItem = false;
+    items = Object.assign({}, ITEM_QUOTA);
+    bestMoves = sol.weight; bestTaps = sol.taps;
+    hintCell = null; revealSet = null; solved = false;
+    ok = true;
+  }
+  if (!ok){                                  // 兜底：单点题必可解
+    const sel = new Uint8Array(N); sel[0]=1;
+    const b = applyMoves(sel); const sol = solveOpt(b);
+    state = b.map(v=>v?0:1);
+    moves=0; history=[]; usedItem=false; items=Object.assign({},ITEM_QUOTA);
+    bestMoves=sol.weight; bestTaps=sol.taps; solved=false;
+    // 提示/透视高亮也必须清：它们是上一局的残留，切了立体时 hintCell 那个裸下标
+    // 会落到毫不相干的格子上，同立体时 revealSet 整份留着会把"透视"点亮范围带进新局。
+    hintCell=null; revealSet=null;
+  }
+  anim.forEach((_,i)=>anim[i]=-1e9);      // 同上：新局不能把全部贴纸标成"刚翻转"
+}
+
+/* ---------- 颜色 / 光照 ---------- */
+function hex2rgb(h){ const v=parseInt(h.slice(1),16); return [v>>16&255, v>>8&255, v&255]; }
+const cl255 = c => Math.max(0, Math.min(255, Math.round(c)));
+/** 按 k(-1..1) 提亮/压暗并保持色相：k>0 向白靠，k<0 向黑靠。返回 [r,g,b]。
+ *  入参既收 '#RRGGBB' 也收 [r,g,b] —— 上层算好的中间色直接透传，
+ *  若这里只认 hex，paintFace 内部再 tone() 一次就会 parseInt 一个数组得到 NaN，
+ *  渐变色标变非法（真 canvas 会抛 SyntaxError，桩实现却是空函数 → 查不出来）。 */
+function tone(col, k){
+  const c = (typeof col === 'string') ? hex2rgb(col) : col;
+  const f = k>=0 ? 255 : 0, a = Math.abs(k);
+  return [cl255(c[0]+(f-c[0])*a), cl255(c[1]+(f-c[1])*a), cl255(c[2]+(f-c[2])*a)];
+}
+/** 同 tone，但返回 hex（需要在颜色之间传递时用） */
+function tone2(hex, k){ const c = tone(hex, k);
+  return '#'+((1<<24)+(c[0]<<16)+(c[1]<<8)+c[2]).toString(16).slice(1); }
+const rgba = (c,a)=>'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')';
+
+// 世界空间光。高光随立方体旋转扫过表面 —— 这是"真 3D"的关键：
+// 若用相机空间光，整个立方体像贴了张平光贴图，怎么转都flat。
+const LIGHT = (()=>{ const v=[-0.46,0.80,0.40]; const m=Math.hypot(v[0],v[1],v[2]); return [v[0]/m,v[1]/m,v[2]/m]; })();
+/* 补光：只有主光时，背向主光的那个面 lambert 恒为 0、整片死黑（实测默认视角下
+ * 右侧整面全黑）。加一盏来自右下后方的弱补光，暗面才留得住自己的色相。 */
+const FILL = (()=>{ const v=[0.70,0.05,0.45]; const m=Math.hypot(v[0],v[1],v[2]); return [v[0]/m,v[1]/m,v[2]/m]; })();
+const KW = 0.78, KF = 0.40;
+/* 3D 动漫（赛璐璐）质感的几组常量：
+ *  INK   墨线颜色 —— 动漫质感的骨架，缺了它再亮的色也像塑料玩具
+ *  BANDS 把连续光照量化成 4 档的提亮系数；平涂大色块 + 硬边高光 = 赛璐璐 */
+const PLASTIC = '#2E3A66';
+const INK     = '#080A16';
+const BANDS   = [-0.46, -0.16, 0.10, 0.26];   // 贴纸：跨度大，才看得出赛璐璐的分档
+const BBANDS  = [-0.24, -0.08, 0.06, 0.20];   // 塑料体：跨度小，免得整块糊成黑
+const CUTS    = [0.62, 0.40, 0.18];           // 升到哪一档（按加了补光后的量程定）
+const bandOf  = sh => sh>=CUTS[0] ? 3 : sh>=CUTS[1] ? 2 : sh>=CUTS[2] ? 1 : 0;
+
+/** 完整多边形路径：贴纸铺满整个面，不切角、不留缝。
+ *  相邻贴纸之间那条硬边界由**墨线**给出（paintFace 的 o.ink），而不是靠缩小或
+ *  切角去"露出底下的塑料体"—— 那会让同一个面看起来像拼贴，而不是一整面。 */
+function pathPlain(pts){
+  const n = pts.length;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i=1;i<n;i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+}
+const stickerPath = pathPlain;
+
+/** 正多面体的棱。两端面都朝前 = 正对观察者的转折棱（细）；只有一端朝前 = 轮廓棱（粗）。
+ *  两端都朝后的（背面那几条）**必须不画** —— 正多面体是凸的，背面棱一定被挡住，
+ *  画出来就是"转起来能看见被遮住的黑线"。
+ *  ★ 找相邻面必须**同时含 ia 与 ib**。早先写成"只查含 ia 的面"就错了：
+ *    八面体的一个顶点属 4 个面、二十面体属 5 个，于是根本不含这条棱的面也被算成
+ *    "朝前的那一侧"，背面棱被误判成可见棱 —— 症状正是转起来看见内部黑线。 */
+function outline(){
+  const p3 = v => rot({ x:v[0], y:v[1], z:v[2] });
+  const V = SOLIDS[TOPO.key].V;
+  for (const [ia, ib] of TOPO.edges){
+    let fa = -1, fb = -1;
+    for (let f=0; f<TOPO.faces.length; f++){
+      const ring = TOPO.faces[f].ring;
+      if (ring.indexOf(ia) < 0 || ring.indexOf(ib) < 0) continue;   // 必须是这条棱的两个端点都在
+      if (fa < 0) fa = f; else { fb = f; break; }                   // 每条棱恰属 2 面
+    }
+    if (fb < 0) continue;                    // 理论上到不了这里（拓扑已校验每棱恰属 2 面）
+    const na = faceNormalZ(fa), nb = faceNormalZ(fb);
+    if (na <= 0.02 && nb <= 0.02) continue;  // 两端面全朝后 = 被挡住，不画
+    const q0 = p3(V[ia]), q1 = p3(V[ib]);
+    const x0 = proj(q0.x,q0.y,q0.z), y0 = projY(q0.x,q0.y,q0.z);
+    const x1 = proj(q1.x,q1.y,q1.z), y1 = projY(q1.x,q1.y,q1.z);
+    const both = na > 0.02 && nb > 0.02;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1);
+    ctx.lineWidth = both ? 1.6 : 3.4;
+    ctx.strokeStyle = both ? 'rgba(10,13,28,0.80)' : 'rgba(4,5,14,0.95)';
+    ctx.stroke();
+  }
+}
+
+/** 逐边描线：朝光的一侧描亮边、背光的一侧描暗边、中间取向描中灰。
+ *  之前所有边一律描同一种黑线，结果立方体读成了一张黑网格——线是有方向的，
+ *  分不清方向就等于没描。侧边单独归一档，是为了让**外轮廓**不至于被压死。 */
+function bevelStroke(pts, cx, cy, w, litCol, darkCol, midCol, path){
+  const n = pts.length;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // 先沿圆角轮廓描一圈中灰，压住外轮廓
+  path(pts);
+  ctx.lineWidth = w; ctx.strokeStyle = midCol; ctx.stroke();
+  // 再逐边描受光/背光。ins 是端点内缩比例：不内缩的话直线会从圆角外侧穿出去。
+  const T = 0.16;
+  for (let i=0;i<n;i++){
+    const a = pts[i], b = pts[(i+1)%n];
+    const mx = (a.x+b.x)/2 - cx, my = (a.y+b.y)/2 - cy;
+    const m = Math.hypot(mx,my) || 1;
+    const d = (mx/m)*LS.x + (my/m)*LS.y;
+    ctx.beginPath();
+    ctx.moveTo(a.x+(b.x-a.x)*T, a.y+(b.y-a.y)*T);
+    ctx.lineTo(b.x+(a.x-b.x)*T, b.y+(a.y-b.y)*T);
+    ctx.lineWidth = w;
+    ctx.strokeStyle = d >  0.28 ? litCol : d < -0.28 ? darkCol : midCol;
+    ctx.stroke();
+  }
+}
+
+/* ---------- 3D 投影 ---------- */
+/* ---- 朝向：四元数 ----
+ * 原先用欧拉角 yaw/pitch，水平永远绕**世界 Y 轴**转。那是万向节死锁：
+ * 一旦俯仰到 90°，世界 Y 轴就指到屏幕外去了，"往右拖"再也不是绕屏幕竖轴转；
+ * 到 180° 时方向正好彻底反过来。改用四元数后不存在奇点，拖到哪都是同一套手感。
+ * 俯仰也就不再需要夹在 ±170°（那正是当初为了"能看到底面"硬加的补丁）。 */
+const AXIS_X = { x:1, y:0, z:0 }, AXIS_Y = { x:0, y:1, z:0 };
+
+function qAxis(ax, ang){ const h = ang/2, s = Math.sin(h);
+  return { x:ax.x*s, y:ax.y*s, z:ax.z*s, w:Math.cos(h) }; }
+function qMul(a, b){ return {
+  x: a.w*b.x + a.x*b.w + a.y*b.z - a.z*b.y,
+  y: a.w*b.y - a.x*b.z + a.y*b.w + a.z*b.x,
+  z: a.w*b.z + a.x*b.y - a.y*b.x + a.z*b.w,
+  w: a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z }; }
+/** 用 q 旋转向量（v' = q v q⁻¹） */
+function qRot(q, v){
+  const tx = 2*(q.y*v.z - q.z*v.y), ty = 2*(q.z*v.x - q.x*v.z), tz = 2*(q.x*v.y - q.y*v.x);
+  return { x: v.x + q.w*tx + (q.y*tz - q.z*ty),
+           y: v.y + q.w*ty + (q.z*tx - q.x*tz),
+           z: v.z + q.w*tz + (q.x*ty - q.y*tx) };
+}
+/** 用 q⁻¹ 旋转向量：把**相机空间**的轴换算成**世界空间**的轴 */
+function qUnrot(q, v){ return qRot({ x:-q.x, y:-q.y, z:-q.z, w:q.w }, v); }
+function qNorm(q){ const m = Math.hypot(q.x,q.y,q.z,q.w) || 1;
+  return { x:q.x/m, y:q.y/m, z:q.z/m, w:q.w/m }; }
+
+/** 初始 3/4 视角，等价于原来的 yaw=-0.62, pitch=0.42 */
+function defaultQ(){ return qNorm(qMul(qAxis(AXIS_X, 0.42), qAxis(AXIS_Y, -0.62))); }
+let Q = defaultQ(), zoom = 1;
+function resetView(){ Q = defaultQ(); zoom = 1; }
+/** 立方体局部坐标 → 相机空间 */
+function rot(p){ return qRot(Q, p); }
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let W=0, H=0, DPR=1;
+function resize(){
+  const r = cv.parentElement.getBoundingClientRect();
+  DPR = Math.min(window.devicePixelRatio||1, 3);
+  W = Math.max(1, r.width|0); H = Math.max(1, r.height|0);
+  cv.width = W*DPR; cv.height = H*DPR;
+  cv.style.width = W+'px'; cv.style.height = H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resize);
+
+/* ---------- 多面体几何（相机空间） ---------- */
+/* 本体外伸 = 贴纸外伸 = 1.0：贴纸铺满整个面，边界只靠墨线区分。
+ * 早先这里给贴纸留了 0.82 的缝并切角，同一面看起来像拼贴而不是一整面。 */
+const BODY_S   = 1.0;
+const STICKER_S = 1.0;
+
+/** 一组网格顶点的 3D 坐标 → 相机空间点 */
+function camOf(p){ return rot({ x:p[0], y:p[1], z:p[2] }); }
+
+/** 面 f 的外轮廓（相机空间）。s=1 原尺寸，s<1 向面心收缩（贴纸留缝用）。 */
+function facePoly(f, s){
+  const ring = TOPO.faces[f].ring, c = TOPO.faces[f].c;
+  return ring.map(vi=>{
+    const p = SOLIDS[TOPO.key].V[vi];
+    return camOf([ c[0]+(p[0]-c[0])*s, c[1]+(p[1]-c[1])*s, c[2]+(p[2]-c[2])*s ]);
+  });
+}
+/** 格子 i 的多边形（相机空间）。s<1 向格心收缩，得到贴纸与贴纸之间的缝。 */
+function cellPoly(i, s){
+  const cell = TOPO.cells[i], vs = cell.v;
+  let cx=0, cy=0, cz=0;
+  for (const vi of vs){ const p = TOPO.verts[vi]; cx+=p[0]; cy+=p[1]; cz+=p[2]; }
+  cx/=vs.length; cy/=vs.length; cz/=vs.length;
+  return vs.map(vi=>{
+    const p = TOPO.verts[vi];
+    return camOf([ cx+(p[0]-cx)*s, cy+(p[1]-cy)*s, cz+(p[2]-cz)*s ]);
+  });
+}
+function faceNormalZ(f){
+  const n = TOPO.faces[f].n;
+  return rot({ x:n[0], y:n[1], z:n[2] }).z;
+}
+function normalZ(i){ return faceNormalZ(TOPO.cells[i].f); }
+/** 该朝向的漫反射强度（0..1）：法线是固定的，只有旋转会改变它与光的夹角 */
+function lambert(f){
+  const n = TOPO.faces[f].n;
+  return KW*Math.max(0, n[0]*LIGHT[0] + n[1]*LIGHT[1] + n[2]*LIGHT[2])
+       + KF*Math.max(0, n[0]*FILL[0]  + n[1]*FILL[1]  + n[2]*FILL[2]);
+}
+
+/* 视口拟合。必须和 proj/projY 用**同一个**投影——两套投影不一致的直接
+ * 后果是包围盒不再中心对称，ox/oy 会跟着姿态漂（实测横摆 66px、竖摆 99px），
+ * 立体在画面里像在乱窜。 */
+let fit = { k:1, ox:0, oy:0 };
+/* 刚性缩放：按外接球取**常数**缩放，物体原地转、大小恒定。
+ * 全部顶点的半径都归一化到 1 ⇒ SPHERE_R = 1 恒包住任何朝向，永远不会切边，
+ * 五种立体也因此占同样大小，比较才公平。这是默认：自动填充会让缩放系数随
+ * 朝向变化（实测 ±37%），正对面时胀大、转到体对角时缩小——像在变焦而不是转物体。 */
+const SPHERE_R = 1;
+let rigidFit = true;
+function computeFit(){
+  let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  if (!rigidFit){
+    for (const p of TOPO.verts){
+      const r = rot({ x:p[0], y:p[1], z:p[2] });
+      const X = r.x, Y = -r.y;
+      if(X<minX)minX=X; if(X>maxX)maxX=X; if(Y<minY)minY=Y; if(Y>maxY)maxY=Y;
+    }
+  }
+  const bw = Math.max(1e-3, maxX-minX), bh = Math.max(1e-3, maxY-minY);
+  const k = rigidFit ? Math.min(W,H)*0.92/(2*SPHERE_R)*zoom
+                     : Math.min(W/bw, H/bh) * 0.92 * zoom;
+  fit = { k, ox: W/2, oy: H/2 };
+}
+/* 世界 +y 必须是屏幕「上」。原先 projY 直接把 y 映射到屏幕 y（向下为正），
+   而 computeFit 的包围盒用的是 -r.y —— 两处符号不一致，立方体被上下镜像：
+   +y 的「上面」画到了屏幕下方，手下划时观感也就成了"往上转"。
+   两处必须同为 -y。 */
+const proj  = (x,y,z)=> fit.ox + x*fit.k;
+const projY = (x,y,z)=> fit.oy - y*fit.k;
+
+/* ---------- 动画 ---------- */
+// 翻转时刻（ms）。anim 已在 activateSolid 里按当前格数分配并重置；
+// 初值必须远小于 now()：若按 0 起算，首 300ms 内每张贴纸
+// 都会落进「刚翻转」的辉光分支，整块立体看起来像已通关。
+const DUR = 300;
+function now(){ return performance.now(); }
+
+/* ---------- 命中 ---------- */
+function hitAt(sx, sy){
+  const list = [];
+  for (let i=0;i<N;i++){
+    if (normalZ(i) <= 0.02) continue;
+    const q = cellPoly(i, STICKER_S);
+    const zs = q.map(p=>p.z);
+    list.push({ i, z: Math.min.apply(null, zs), q });
+  }
+  list.sort((a,b)=> b.z - a.z );        // 近的优先
+  for (const it of list){
+    const q = it.q;
+    let inside = false;
+    for (let a=0,b=q.length-1; a<q.length; b=a++){
+      const xa = proj(q[a].x,q[a].y,q[a].z), ya = projY(q[a].x,q[a].y,q[a].z);
+      const xb = proj(q[b].x,q[b].y,q[b].z), yb = projY(q[b].x,q[b].y,q[b].z);
+      if ((ya>sy) !== (yb>sy) && sx < (xb-xa)*(sy-ya)/(yb-ya)+xa) inside = !inside;
+    }
+    if (inside) return it.i;
+  }
+  return -1;
+}
+
+/* ---------- 绘制 ---------- */
+let aidOn = false, monoWin = false;
+
+/** 圆角多边形路径：r = 圆角占相邻边长的比例。积木的圆角就是"倒角"的廉价来源。 */
+function pathRound(pts, r){
+  const n = pts.length;
+  ctx.beginPath();
+  for (let i=0;i<n;i++){
+    const p0=pts[(i-1+n)%n], p1=pts[i], p2=pts[(i+1)%n];
+    const d0=Math.hypot(p0.x-p1.x,p0.y-p1.y)||1, d1=Math.hypot(p2.x-p1.x,p2.y-p1.y)||1;
+    const rr=Math.min(d0,d1)*r;
+    const a={x:p1.x+(p0.x-p1.x)/d0*rr, y:p1.y+(p0.y-p1.y)/d0*rr};
+    const b={x:p1.x+(p2.x-p1.x)/d1*rr, y:p1.y+(p2.y-p1.y)/d1*rr};
+    if (i) ctx.lineTo(a.x,a.y); else ctx.moveTo(a.x,a.y);
+    ctx.quadraticCurveTo(p1.x,p1.y,b.x,b.y);
+  }
+  ctx.closePath();
+}
+/** 光向投到屏幕（y 已翻成向下为正） */
+let LS = { x:-1, y:0 };
+function lightScreen(){ const r = rot({x:LIGHT[0],y:LIGHT[1],z:LIGHT[2]});
+  const m = Math.hypot(r.x, r.y) || 1; return { x:r.x/m, y:-r.y/m }; }
+
+/** 背景：深空渐变 + 星云 + 漂移星场 + 扫描线 + HUD 瞄准环。
+ *  全部与立方体朝向无关，所以自由翻滚时不会露出"地板穿帮"之类的破绽。 */
+const STARS = (()=>{ const a=[]; let s=12345;
+  const rnd=()=>{ s=(s*1103515245+12345)&0x7fffffff; return s/0x7fffffff; };
+  const tint=[[150,215,255],[210,180,255],[255,190,230],[180,255,240]];
+  for(let i=0;i<130;i++){ const c=tint[(rnd()*tint.length)|0];
+    a.push({ x:rnd(), y:rnd(), r:0.4+rnd()*1.5, a:0.2+rnd()*0.6, s:0.004+rnd()*0.02,
+             c:'rgb('+c[0]+','+c[1]+','+c[2]+')' }); }
+  return a; })();
+let bgTick = 0;
+
+function drawBg(t){
+  const g = ctx.createRadialGradient(W*0.5, H*0.40, 0, W*0.5, H*0.46, Math.max(W,H)*0.82);
+  g.addColorStop(0,   '#1B1450');
+  g.addColorStop(0.45,'#0C0C2C');
+  g.addColorStop(1,   '#03030A');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  // 星云：两团低饱和辉光，给深空一点体积
+  for (const nb of [[0.22,0.26,0.55,'rgba(64,32,160,'],[0.80,0.72,0.48,'rgba(160,32,120,']]){
+    const x=(nb[0]+Math.sin(t*0.00007)*0.03)*W, y=(nb[1]+Math.cos(t*0.00005)*0.03)*H, r=nb[2]*Math.max(W,H);
+    const ng=ctx.createRadialGradient(x,y,0,x,y,r);
+    ng.addColorStop(0, nb[3]+'0.30)'); ng.addColorStop(1, nb[3]+'0)');
+    ctx.fillStyle=ng; ctx.fillRect(0,0,W,H);
+  }
+
+  // 星场（缓慢漂移 + 轻微闪烁）
+  for (const s of STARS){
+    const sx = ((s.x + t*s.s) % 1.2 - 0.1) * W;
+    const sy = ((s.y - t*s.s*0.35) % 1.2 - 0.1) * H;
+    ctx.fillStyle = s.c.replace('rgb(', 'rgba(').replace(')',
+      ',' + (s.a*(0.62+0.38*Math.sin(t*0.0016+s.x*30))).toFixed(3) + ')');
+    ctx.fillRect(sx, sy, s.r, s.r);
+  }
+
+  // HUD 瞄准环：绕中心缓慢反向旋转的同心断弧 + 刻度
+  const cx = W/2, cy = H/2, R = Math.min(W,H)*0.42;
+  ctx.save(); ctx.translate(cx,cy);
+  for (let g2=0; g2<3; g2++){
+    const rr = R*(0.70+g2*0.17), sweep = Math.PI*(0.40-g2*0.08);
+    const a0 = t*0.00016*(g2%2?-1:1);
+    ctx.strokeStyle = 'rgba(120,220,255,'+(0.26-g2*0.05).toFixed(3)+')';
+    ctx.lineWidth = 1.2;
+    for (let k=0;k<3;k++){
+      const s0 = a0 + k*(Math.PI*2/3);
+      ctx.beginPath(); ctx.arc(0,0,rr,s0,s0+sweep); ctx.stroke();
+    }
+  }
+  ctx.strokeStyle = 'rgba(160,140,255,0.16)'; ctx.lineWidth = 1;
+  for (let k=0;k<48;k++){
+    const a = k*Math.PI/24, r0 = R*1.22, r1 = r0 + (k%4===0 ? 9 : 4);
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*r0, Math.sin(a)*r0); ctx.lineTo(Math.cos(a)*r1, Math.sin(a)*r1);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 扫描线
+  ctx.fillStyle = 'rgba(0,0,0,0.16)';
+  for (let y=0; y<H; y+=3) ctx.fillRect(0, y, W, 1);
+
+  const v = ctx.createRadialGradient(cx,cy,Math.min(W,H)*0.26, cx,cy, Math.max(W,H)*0.80);
+  v.addColorStop(0,'rgba(0,0,0,0)');
+  v.addColorStop(1,'rgba(0,0,0,0.66)');
+  ctx.fillStyle = v; ctx.fillRect(0,0,W,H);
+}
+
+/**
+ * 画一个受光的面。
+ * @param c3    相机空间四角
+ * @param base  基色 [r,g,b]
+ * @param f     朝向（决定法线 → 漫反射）
+ * @param fog   0..1 深度衰减，1=最近
+ * @param rr    圆角比例
+ * @param spec  是否画镜面高光
+ */
+function paintFace(c3, base, f, fog, rr, o){
+  const path = o.chamfer ? stickerPath : (p=>pathRound(p, rr));
+  const pts = c3.map(p=>({ x: proj(p.x,p.y,p.z), y: projY(p.x,p.y,p.z) }));
+  let cx=0, cy=0;
+  for(const p of pts){ cx+=p.x; cy+=p.y; }
+  cx/=pts.length; cy/=pts.length;     // 顶点数随立体变（三角/四边/五边），不能写死 4
+  let span=0;
+  for(const p of pts) span=Math.max(span, Math.hypot(p.x-cx,p.y-cy));
+  span = Math.max(2, span*1.5);
+
+  const sh = lambert(f);
+  /* ---- 赛璐璐平涂：光照量化成 4 档，不再用连续渐变 ----
+   * 连续渐变会把手办感抹平；动漫的"平涂大色块 + 硬边高光"才让色块本身成为形状。 */
+  const b = bandOf(sh);
+  const bands = o.bands || BANDS;
+  ctx.fillStyle = rgba(tone(base, bands[b]*(0.62+0.38*fog)), 1);
+  path(pts); ctx.fill();
+
+  /* 硬边高光：裁到面内画一条斜带。软渐变高光是塑料玩具的标志，
+   * 硬边才是动漫高光的特征。强度跟着受光量走，背光面自动没有。 */
+  if (o.shine && sh > 0.18){
+    ctx.save();
+    path(pts); ctx.clip();
+    const g = ctx.createLinearGradient(cx-LS.x*span, cy-LS.y*span, cx+LS.x*span, cy+LS.y*span);
+    const a = Math.min(0.42, (sh-0.18)*0.85)*fog;
+    g.addColorStop(0.00, 'rgba(255,255,255,0)');
+    g.addColorStop(0.38, 'rgba(255,255,255,0)');
+    g.addColorStop(0.44, 'rgba(255,255,255,'+a.toFixed(3)+')');
+    g.addColorStop(0.60, 'rgba(255,255,255,'+(a*0.18).toFixed(3)+')');
+    g.addColorStop(0.66, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(cx-span*1.2, cy-span*1.2, span*2.4, span*2.4);
+    ctx.restore();
+  }
+
+  /* 描边：贴纸用统一墨线（它要的是"贴纸边缘"这条硬边界）；
+   * 塑料体用逐边 bevelStroke（它要的是面与面之间的转折）。 */
+  if (o.ink){
+    if (o.bevel){
+      bevelStroke(pts, cx, cy, o.ink,
+        rgba(tone(base, 0.46), (0.34+0.34*sh)*fog),          // 受光边
+        rgba([10,13,28],  0.55*fog),                          // 背光边
+        rgba(tone(base, 0.10), 0.30*fog), path);               // 侧边 / 外轮廓
+    } else {
+      path(pts);
+      ctx.lineWidth = o.ink; ctx.lineJoin = 'round';
+      ctx.strokeStyle = rgba(tone(base, 0.34), 0.30*fog);
+      ctx.stroke();
+      path(pts);
+      ctx.lineWidth = o.ink*0.66; ctx.strokeStyle = INK; ctx.stroke();
+    }
+  }
+  return pts;
+}
+
+function draw(){
+  drawBg(++bgTick);
+  computeFit();
+  LS = lightScreen();
+
+  // 面按面心深度由远及近（正交投影，深度就是相机空间 z）
+  const faces = TOPO.faces.map((fc,f)=>({ f, z: rot({x:fc.c[0],y:fc.c[1],z:fc.c[2]}).z }));
+  const visFaces = faces.filter(o=>faceNormalZ(o.f) > 0.02).sort((a,b)=> a.z - b.z);
+  const visCells = [];
+  for (let i=0;i<N;i++){
+    if (normalZ(i) <= 0.02) continue;
+    const vs = TOPO.cells[i].v;
+    let zc = 0; for (const vi of vs){ const p = TOPO.verts[vi]; zc += rot({x:p[0],y:p[1],z:p[2]}).z; }
+    visCells.push({ i, z: zc/vs.length });
+  }
+  visCells.sort((a,b)=> a.z - b.z);
+  const z0 = visCells.length ? visCells[0].z : 0;
+  const zr = Math.max(1e-3, visCells[visCells.length-1].z - z0);
+
+  // ---- ① 塑料体：面拼成连续表面，面与面之间的墨线就是装甲拼缝 ----
+  for (const o of visFaces){
+    const fog = 0.52 + 0.48*((o.z - z0)/zr);
+    paintFace(facePoly(o.f, BODY_S), PLASTIC, o.f, fog, 0.20,
+              { shine:false, ink:1.6, bevel:true, bands:BBANDS });
+  }
+
+  // ---- ② 贴纸 ----
+  for (const o of visCells){
+    const idx = o.i, f = TOPO.cells[idx].f, fcol = TOPO.faces[f].col;
+    const fog = 0.52 + 0.48*((o.z - z0)/zr);
+
+    const on = state[idx] === 1;
+    let baseHex;
+    if (solved && monoWin) baseHex = '#F2F4F8';
+    else if (on)          baseHex = fcol;
+    else                  baseHex = tone2(fcol, -0.70);
+
+    const c3 = cellPoly(idx, STICKER_S);
+    const t = (now() - anim[idx]) / DUR;
+    let pts;
+    if (t >= 0 && t < 1){
+      // 翻转脉冲：整块贴纸短暂发光
+      const e = Math.sin(t*Math.PI);
+      pts = paintFace(c3, tone(fcol, 0.25 + e*0.5), f, 1, 0.24,
+                      { shine:false, ink:2.4, chamfer:true });
+      ctx.save();
+      ctx.globalAlpha = e;
+      ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2.4; ctx.lineJoin='round';
+      stickerPath(pts); ctx.stroke();
+      ctx.restore();
+    } else {
+      pts = paintFace(c3, baseHex, f, fog, 0.24, { shine:true, ink:2.8, chamfer:true });
+      /* 分层辉光：3 圈递减的描边代替 shadowBlur —— 后者在移动端是逐帧重建
+       * 模糊图，每帧几十次会直接掉帧，观感上却和这个几乎一样。
+       * 宽度刻意收窄：辉光一大，色块就糊成"果冻"，赛璐璐的硬边反而没了。 */
+      if (on){
+        const rim = tone(fcol, 0.42);
+        const ga = (0.10 + 0.16*lambert(f))*fog;
+        for (const [w,a] of [[6,0.09],[3.4,0.15],[2.2,0.30]]){
+          ctx.lineWidth = w; ctx.lineJoin = 'round';
+            ctx.strokeStyle = rgba(rim, (a*ga/0.26).toFixed(3));
+            stickerPath(pts); ctx.stroke();
+          }
+        }
+      }
+
+      // 提示 / 透视高亮
+      const hl = (hintCell === idx) ? 1 : (revealSet && revealSet[idx]) ? 0.85 : 0;
+      if (hl){
+        ctx.save();
+        ctx.lineWidth = 2.6; ctx.strokeStyle = '#FFE45C'; ctx.lineJoin='round';
+        stickerPath(pts); ctx.stroke();
+        ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(255,228,92,0.30)';
+        stickerPath(pts); ctx.stroke();
+        ctx.restore();
+      }
+
+      if (aidOn){
+        let cx=0, cy=0;
+        for(const p of pts){ cx+=p.x; cy+=p.y; }
+        cx/=pts.length; cy/=pts.length;          // 顶点数随立体变（3/4/5），不能写死 4
+        const sz = Math.max(8, fit.k*0.15);
+        ctx.fillStyle = on ? 'rgba(0,0,0,.55)' : 'rgba(255,255,255,.32)';
+        ctx.font = sz+'px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(faceGlyph(f), cx, cy);
+      }
+  }
+
+  // ---- ③ 棱线：最后画，盖住所有贴纸，把立体的形"扣"出来 ----
+  outline();
+
+  // 通关整体呼吸
+  if (solved){
+    ctx.save();
+    ctx.globalAlpha = 0.10 + 0.05*Math.sin(now()/260);
+    ctx.fillStyle = '#FFE45C';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+}
+
+/* ---------- HUD ---------- */
+const $ = id => document.getElementById(id);
+function starsOf(m,b){ return m<=b ? 3 : m<=b+2 ? 2 : 1; }
+function faceDone(f){
+  // 该面上所有格子都亮
+  for (let i=0;i<N;i++) if (TOPO.cells[i].f === f && state[i] !== 1) return false;
+  return true;
+}
+function hud(){
+  $('moves').textContent = moves;
+  $('best').textContent  = bestMoves;
+  $('stars').textContent = '★'.repeat(starsOf(moves,bestMoves)) + '☆'.repeat(3-starsOf(moves,bestMoves));
+  $('lh').textContent = items.hint;
+  $('lr').textContent = items.reveal;
+  $('lu').textContent = history.length;
+  const fd = $('faces'); fd.innerHTML = '';
+  for (let f=0; f<TOPO.faces.length; f++){
+    const el = document.createElement('i');
+    el.style.background = TOPO.faces[f].col;
+    el.title = TOPO.cn + '面' + (f+1);
+    if (faceDone(f)) el.className = 'done';
+    fd.appendChild(el);
+  }
+}
+function curOpt(){                     // 当前局面的真·最优
+  const b = new Uint8Array(N);
+  for (let i=0;i<N;i++) b[i] = state[i] ? 0 : 1;
+  return solveOpt(b);
+}
+
+/* ---------- 动作 ---------- */
+function doTap(i){
+  if (solved || i < 0) return;
+  const set = FLIP[i];
+  for (const s of set){ state[s] ^= 1; anim[s] = now(); }
+  history.push(i);
+  moves++;
+  hintCell = null; revealSet = null;
+  if (state.every(v=>v===1)) win();
+  hud();
+}
+function win(){
+  solved = true;
+  const perfect = moves <= bestMoves && !usedItem;
+  const s = starsOf(moves, bestMoves);
+  $('winStars').textContent = '★'.repeat(s) + '☆'.repeat(3-s);
+  $('winTitle').textContent = perfect ? '完美通关' : '点亮完成';
+  $('w1').textContent = moves + ' 步';
+  $('w2').textContent = bestMoves + ' 步';
+  $('w3').textContent = perfect ? '是（达最优且未用道具）' : (moves>bestMoves ? '否（超出最优）' : '否（用过道具）');
+  setTimeout(()=>$('winModal').classList.remove('hidden'), 420);
+}
+
+/* ---------- 手势 ---------- */
+/* 轨道 = 绕「屏幕上的轴」转，而不是绕世界的固定轴。
+     往右拖 → 绕相机的上方向（屏幕竖轴）；往下拖 → 绕相机的右方向（屏幕横轴）。
+   两条轴都要先用 q⁻¹ 从相机空间换算到世界空间——这正是欧拉角做不到的地方：
+   姿态变了以后，"屏幕上的竖轴"在世界里的方向也跟着变，不换算就会用错轴。 */
+const DRAG_SENS = 0.006;
+let INVERT_X = false, INVERT_Y = false;
+let down = null;
+cv.addEventListener('pointerdown', e=>{
+  try { cv.setPointerCapture(e.pointerId); } catch(err){}
+  down = { x:e.clientX, y:e.clientY, t:now(), drag:false };
+});
+cv.addEventListener('pointermove', e=>{
+  if (!down) return;
+  const dx = e.clientX - down.x, dy = e.clientY - down.y;
+  if (!down.drag){
+    if (Math.hypot(dx,dy) < 8) return;
+    down.drag = true;
+  }
+  // 右乘！q_new = Q · R(轴,角) 才是"先在物体自身坐标系里转，再投影"。
+  // 左乘 q_new = R(轴,角) · Q 等价于"先做视图变换、再在相机空间转"，那时生效的轴
+  // 是**世界系**那条轴本身，而不是它换算到相机空间后的样子 —— 屏幕竖轴就废了。
+  if (dx) Q = qNorm(qMul(Q, qAxis(qUnrot(Q, AXIS_Y), dx * DRAG_SENS * (INVERT_X ? -1 : 1))));
+  if (dy) Q = qNorm(qMul(Q, qAxis(qUnrot(Q, AXIS_X), dy * DRAG_SENS * (INVERT_Y ? -1 : 1))));
+  down.x = e.clientX; down.y = e.clientY;
+});
+function endPointer(e){
+  if (!down) return;
+  const d = down; down = null;
+  if (d.drag) return;
+  if (now() - d.t > 600) return;
+  const r = cv.getBoundingClientRect();
+  doTap(hitAt(e.clientX - r.left, e.clientY - r.top));
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', ()=>{ down=null; });
+cv.addEventListener('wheel', e=>{ e.preventDefault(); zoom = Math.max(0.6, Math.min(1.8, zoom - e.deltaY*0.0012)); }, {passive:false});
+
+window.addEventListener('keydown', e=>{
+  const k = e.key.toLowerCase();
+  const a = 0.10 * (INVERT_X ? -1 : 1), b = 0.10 * (INVERT_Y ? -1 : 1);
+  if (k==='arrowleft')       Q = qNorm(qMul(Q, qAxis(qUnrot(Q, AXIS_Y), -a)));
+  else if (k==='arrowright') Q = qNorm(qMul(Q, qAxis(qUnrot(Q, AXIS_Y),  a)));
+  else if (k==='arrowup')    Q = qNorm(qMul(Q, qAxis(qUnrot(Q, AXIS_X), -b)));
+  else if (k==='arrowdown')  Q = qNorm(qMul(Q, qAxis(qUnrot(Q, AXIS_X),  b)));
+  else if (k==='z') act('undo');
+  else if (k==='n') act('new');
+  else if (k==='r'){ resetView(); }
+  else return;
+  e.preventDefault();
+});
+
+function act(a){
+  if (a==='reset'){ resetView(); return; }
+  if (solved && a!=='new') return;
+  if (a==='undo'){
+    if (!history.length) return;
+    const i = history.pop();
+    for (const s of FLIP[i]){ state[s] ^= 1; anim[s] = now(); }
+    moves = Math.max(0, moves-1);
+    hintCell = null; revealSet = null;
+  }
+  else if (a==='hint'){
+    if (items.hint <= 0) return;
+    const o = curOpt(); if (!o || !o.taps) return;
+    const on = o.taps.map((v,i)=>v?i:-1).filter(i=>i>=0);
+    if (!on.length) return;
+    hintCell = on[Math.floor(Math.random()*on.length)];
+    revealSet = null; items.hint--; usedItem = true;
+  }
+  else if (a==='reveal'){
+    if (items.reveal <= 0) return;
+    const o = curOpt(); if (!o || !o.taps) return;
+    revealSet = o.taps.slice(); hintCell = null; items.reveal--; usedItem = true;
+  }
+  else if (a==='new'){ newPuzzle($('selDiff').selectedIndex); }
+  hud();
+}
+document.getElementById('tools').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if (!b) return;
+  act(b.dataset.a);
+});
+
+/* ---------- 控件 ---------- */
+const selDiff = $('selDiff');
+DIFFS.forEach((d,i)=>{ const o=document.createElement('option'); o.textContent='难度：'+d.name; selDiff.appendChild(o); });
+selDiff.selectedIndex = 1;
+selDiff.onchange = ()=>newPuzzle(selDiff.selectedIndex);
+
+/* 立体选择：切换要重建拓扑与 GF(2) 规模，并重开一局 */
+const selSolid = $('selSolid');
+SOLID_ORDER.forEach(k=>{
+  const o = document.createElement('option');
+  o.value = k; o.textContent = '立体：' + SOLIDS[k].cn + '（' + buildSolid(k).n + ' 张）';
+  selSolid.appendChild(o);
+});
+/* 立体切换：重建拓扑与 GF(2) 规模，并重开一局 */
+function switchSolid(key){
+  if (!SOLIDS[key]) return;
+  activateSolid(key);
+  selSolid.value = key;
+  $('solidName').textContent = TOPO.cn;
+  $('tip').textContent = '拖动旋转 · 点击翻转 · 方向键旋转 · Z 撤销 · N 换题';
+  newPuzzle(selDiff.selectedIndex);
+  hud();
+}
+selSolid.onchange = ()=>switchSolid(selSolid.value);
+$('selWin').onchange = e=>{ monoWin = e.target.value==='mono'; };
+$('selAid').onchange = e=>{ aidOn = e.target.value==='1'; };
+$('btnInfo').onclick = ()=>{
+  const t0=now(); for(let i=0;i<20;i++){ const b=new Uint8Array(N); for(let k=0;k<N;k++) b[k]=Math.random()<0.5?1:0; solveOpt(b); }
+  $('i1').textContent = N + ' 张';
+  $('i2').textContent = Object.keys(NEI).map(k=>NEI[k]+' 格 × '+k).join('　');
+  $('i3').textContent = RANK + ' / ' + N;
+  $('i4').textContent = NULLITY + (NULLITY===0 ? '（解唯一）' : ' → 每局面 ' + Math.pow(2,NULLITY) + ' 个解');
+  $('i5').textContent = NULLITY<=20 ? '2^'+NULLITY+' = '+Math.pow(2,NULLITY) : '> 2^20，退化为特解';
+  $('i6').textContent = ((now()-t0)/20).toFixed(2) + ' ms';
+  $('infoModal').classList.remove('hidden');
+};
+$('infoClose').onclick = ()=>$('infoModal').classList.add('hidden');
+$('winClose').onclick = ()=>$('winModal').classList.add('hidden');
+$('winAgain').onclick = ()=>{ $('winModal').classList.add('hidden'); newPuzzle(selDiff.selectedIndex); };
+
+/* ---------- 主循环 ---------- */
+resize();
+/* 深链：?solid=icosa 直接进指定立体（也便于逐个立体做渲染核对） */
+(function initSolid(){
+  let want = null;
+  try {
+    if (typeof location !== 'undefined' && location.search) {
+      want = new URLSearchParams(location.search).get('solid');
+    }
+  } catch (e) { /* URLSearchParams 不可用就退回默认立方体 */ }
+  if (want && SOLIDS[want] && want !== TOPO.key) switchSolid(want);
+  else { selSolid.value = TOPO.key; $('solidName').textContent = TOPO.cn; }
+})();
+newPuzzle(selDiff.selectedIndex);
+hud();
+(function loop(){ draw(); requestAnimationFrame(loop); })();
+
+/* ---------- 操控开关与遥测 ---------- */
+$('invX').onchange = e => { INVERT_X = e.target.checked; };
+$('invY').onchange = e => { INVERT_Y = e.target.checked; };
+$('rigid').onchange = e => { rigidFit = e.target.checked; };
+/* 遥测行：欧拉角在这里已经没有意义（也正是它当初制造了万向节死锁），
+   所以直接显示四元数，外加"当前屏幕上方的那个面"——后者才是人能读的姿态。 */
+(function telemetry(){
+  const vis = [];
+  let top = null, bestY = -Infinity;
+  for (let f=0; f<TOPO.faces.length; f++){
+    const nv = TOPO.faces[f].n;
+    const n = qRot(Q, { x:nv[0], y:nv[1], z:nv[2] });
+    if (n.z > 0.02) vis.push(f+1);
+    if (n.y > bestY){ bestY = n.y; top = f+1; }
+  }
+  $('tip').textContent =
+    'q ' + [Q.x,Q.y,Q.z,Q.w].map(v=>(v<0?'':' ')+v.toFixed(3)).join(' ')
+    + '   可见面 [' + vis.join(' ') + ']'
+    + '   屏幕顶面 ' + top
+    + '   灵敏度 ' + (DRAG_SENS*180/Math.PI).toFixed(2) + '°/px'
+    + (INVERT_X ? '   左右已反转' : '') + (INVERT_Y ? '   上下已反转' : '')
+    + (rigidFit ? '   刚性缩放' : '');
+  requestAnimationFrame(telemetry);
+})();
+</script>
+</body>
+</html>
