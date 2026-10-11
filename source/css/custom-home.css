@@ -238,7 +238,7 @@ body.home-page main {
 }
 @media (max-width: 1080px) {
   .home-main {
-    order: 1;
+    order: 2;
   }
 }
 .home-side {
@@ -258,7 +258,7 @@ body.home-page main {
 @media (max-width: 1080px) {
   .home-side {
     position: static;
-    order: 2;
+    order: 1;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;

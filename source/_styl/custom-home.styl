@@ -335,9 +335,9 @@ body.home-page
   min-width 0
   order 2
 
-  // 单列布局（移动端）时正文在前、侧栏面板在后，避免 4 张侧栏卡把文章挤出首屏
+  // 单列布局（移动端）时侧栏面板在前、正文在后，与桌面基础 order 保持一致
   @media (max-width 1080px)
-    order 1
+    order 2
 
 // 右侧固定面板
 .home-side
@@ -358,7 +358,7 @@ body.home-page
 
   @media (max-width 1080px)
     position static
-    order 2
+    order 1
     display grid
     grid-template-columns repeat(2, 1fr)
     gap 16px
